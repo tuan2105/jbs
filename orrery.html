@@ -73,6 +73,29 @@
         .hud-label { position: absolute; top: -20px; white-space: nowrap; font-weight: bold; background: rgba(0,0,0,0.8); padding: 3px 6px; border-radius: 4px; border: 1px solid rgba(0,255,136,0.3); }
 
         #toggle-ui-btn { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; background: #0a1018; border: 1px solid #4af; color: white; cursor: pointer; border-radius: 8px; z-index: 1000; display: none; pointer-events: auto; font-size: 1.2rem; }
+
+        /* Top-left home button */
+        #home-btn {
+            position: fixed;
+            top: 18px;
+            left: 18px;
+            z-index: 1001;
+            background: rgba(8, 12, 18, 0.85);
+            color: #ffffff;
+            border: 1px solid rgba(68,170,255,0.12);
+            padding: 10px 14px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(6px);
+            transition: background 0.18s ease, transform 0.08s ease;
+        }
+        #home-btn:hover { background: rgba(30,120,200,0.12); transform: translateY(-1px); }
+        #home-btn:focus { outline: 3px solid rgba(68,170,255,0.18); }
+
         #reset-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, #2266aa, #114488); border: none; color: white; border-radius: 6px; cursor: pointer; margin-top: 10px; font-weight: bold; letter-spacing: 1px; }
     </style>
     <script type="importmap">
@@ -94,6 +117,7 @@
     
     <div id="hud-layer"></div>
     <button id="toggle-ui-btn" onclick="toggleUI(true)">☰</button>
+    <a href="index.html" id="home-btn" aria-label="Return to index">🏠 Home</a>
 
     <div id="ui-container">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
