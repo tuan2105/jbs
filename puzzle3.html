@@ -1,12 +1,224 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Puzzle 3</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Puzzle 3 — Stones</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --torch-w: 72px;
+            --flame-h: 48px;
+        }
+        html,body{height:100%;margin:0;font-family: 'Cinzel', serif;color:#f5efe6}
+        body{
+            background-image: url('https://i.ibb.co/PG6nVpMs/Gemini-Generated-Image-tjlsk4tjlsk4tjls.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            display:flex;flex-direction:column;align-items:center;justify-content:space-between;
+            text-shadow: 0 2px 0 rgba(0,0,0,0.6);
+        }
+        .overlay{
+            position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.6));
+            pointer-events:none;}
+        header{padding:32px;text-align:center}
+        h1{margin:0;font-size:2.4rem}
+
+        .instructions{background:rgba(0,0,0,0.45);padding:8px 14px;border-radius:8px;margin-top:6px}
+
+        /* Torch row container */
+        .torch-row{
+            --gap: calc((100% - 8 * var(--torch-w)) / 9);
+            width:100%;max-width:1100px;box-sizing:border-box;padding:18px 0 36px;padding-left:var(--gap);padding-right:var(--gap);
+            display:flex;align-items:flex-end;gap:var(--gap);
+            position:relative;z-index:2
+        }
+        .torch{
+            width:var(--torch-w);height:calc(var(--torch-w) * 1.8);
+            display:flex;flex-direction:column;align-items:center;justify-content:flex-end;cursor:pointer;user-select:none;transform-origin:center bottom;
+        }
+        .torch.disabled{cursor:default;opacity:0.95}
+
+        /* Base */
+        .stick{width:14px;height:60%;background:#6d4c2b;border-radius:8px;box-shadow: inset -2px -6px 8px rgba(0,0,0,0.35)}
+        .holder{width:36px;height:18px;background:#b98b5a;border-radius:6px;margin-top:6px;box-shadow:0 3px 0 rgba(0,0,0,0.25)}
+
+        /* flame */
+        .flame{
+            width:36px;height:var(--flame-h);border-radius:50% 50% 40% 40%;margin-bottom:8px;transform-origin:center bottom;opacity:0;transition:opacity .18s ease, transform .18s ease, filter .18s ease;pointer-events:none;position:relative;
+        }
+        .flame::before{ /* inner core */
+            content:'';position:absolute;left:50%;top:6%;transform:translateX(-50%);width:54%;height:62%;background: radial-gradient(circle at 50% 24%, #fff7b6 0%, #ffd36b 20%, #ff9f3b 45%, #ff5b2e 68%);border-radius:50%;filter:blur(0.2px);
+        }
+        .flame::after{ /* outer glow */
+            content:'';position:absolute;left:50%;top:4%;transform:translateX(-50%);width:110%;height:120%;border-radius:50%;background: radial-gradient(circle at 50% 30%, rgba(255,173,76,0.25), rgba(255,85,32,0.12) 35%, rgba(123,31,18,0.02) 70%);filter: blur(6px);opacity:0;transition:opacity .25s ease;
+        }
+        .flame.inner{position:relative}
+
+        .lit .flame{opacity:1;animation: flicker 900ms infinite;}
+        .lit .flame::after{opacity:1}
+
+        @keyframes flicker{
+            0%{transform: translateY(0) scale(1)}
+            25%{transform: translateY(-2px) scale(1.02)}
+            50%{transform: translateY(-3px) scale(1.04)}
+            75%{transform: translateY(-1px) scale(1.01)}
+            100%{transform: translateY(0) scale(1)}
+        }
+
+        /* Improved stick and holder visuals */
+        .stick{width:14px;height:60%;background:linear-gradient(180deg,#6d4c2b 0%, #563b24 60%);border-radius:8px;box-shadow: inset -2px -6px 10px rgba(0,0,0,0.45)}
+        .holder{width:40px;height:18px;background:linear-gradient(180deg,#c99b6d,#b98b5a);border-radius:6px;margin-top:6px;box-shadow:0 4px 0 rgba(0,0,0,0.28)}
+
+        /* hover & active */
+        .torch:hover{transform:translateY(-6px) scale(1.02)}
+        .torch.lit{transform:translateY(-8px) scale(1.03)}
+
+        /* lit glow on base */
+        .lit .holder{box-shadow:0 6px 18px rgba(255,140,40,0.12),0 2px 6px rgba(0,0,0,0.35)}
+
+        /* when full sequence is incorrect */
+        .bad-sequence{animation:shake .55s}
+        @keyframes shake{0%{transform:translateX(0)}25%{transform:translateX(-8px)}50%{transform:translateX(8px)}75%{transform:translateX(-6px)}100%{transform:translateX(0)}}
+
+        /* hide old base elements */
+        .stick,.holder{display:none}
+
+        /* Stone button visuals */
+        .stone{position:relative;width: calc(100% - 8px);height: calc(var(--torch-w) * 1.15);background: radial-gradient(circle at 30% 25%, #e9e6e0, #d0cbc1 35%, #bfb7a8 60%, #9f9586 100%);border-radius:14px;display:flex;align-items:center;justify-content:center;box-shadow: inset -6px -6px 16px rgba(255,255,255,0.12), inset 5px 5px 14px rgba(0,0,0,0.14), 0 8px 26px rgba(0,0,0,0.36);transition:transform .15s ease, box-shadow .15s ease, background .18s ease;font-weight:700;color:#2f281f;font-size:1.05rem;letter-spacing:0.5px;text-shadow:none;padding:6px}
+        .stone:active{transform:translateY(2px) scale(0.996);box-shadow: inset -3px -3px 8px rgba(255,255,255,0.08), inset 3px 3px 6px rgba(0,0,0,0.12)}
+        .torch:hover .stone{transform:translateY(-6px) scale(1.02)}
+        .lit .stone{background: radial-gradient(circle at 30% 25%, #fff8e6, #ffe09a 35%, #ffc157 60%, #d18a3a 100%);box-shadow: 0 10px 36px rgba(255,150,50,0.22), inset -4px -4px 10px rgba(255,255,255,0.12)}
+        .stone-label{font-family: 'Cinzel', serif;font-weight:700;font-size:1rem;color:#3b2e22}
+
+        /* small decorative cracks */
+        .stone::after{content:'';position:absolute;width:80%;height:40%;top:12%;left:10%;background-image:linear-gradient(180deg,rgba(0,0,0,0.03),transparent);opacity:0.12;border-radius:12px;pointer-events:none}
+
+        .modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(25,20,12,0.96);color:#ffd; padding:28px 36px;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.6);display:none;z-index:999} 
+        .modal.show{display:block}
+        .backlink{position:fixed;left:18px;top:18px;background:rgba(0,0,0,0.45);padding:8px 12px;border-radius:6px;text-decoration:none;color:#f9f1e6}
+
+        /* small screens */
+        @media (max-width:520px){:root{--torch-w:48px;--flame-h:32px}.instructions{font-size:0.9rem}}
+    </style>
 </head>
 <body>
-    <h1>Puzzle 3</h1>
-    <p>This puzzle page is empty. Go back to <a href="index.html">Puzzle List</a>.</p>
+    <a class="backlink" href="index.html">&larr; Puzzle List</a>
+    <div class="overlay" aria-hidden="true"></div>
+    <header>
+        <h1>Ancient Stones</h1>
+        <div class="instructions">There are <strong>8</strong> stone tablets. Stone <strong>3</strong> is already activated. Activate them in the exact order to open the safe.</div>
+    </header>
+
+    <div class="torch-row" aria-hidden="false">
+        <!-- Torches (left to right 1..8) -->
+        <!-- Each torch has data-id attribute matching its number -->
+        <div class="torch" data-id="1" title="Stone 1" aria-label="Stone 1">
+            <div class="stone" aria-hidden="true"><span class="stone-label">1</span></div>
+        </div> 
+        <div class="torch" data-id="2" title="Stone 2" aria-label="Stone 2">
+            <div class="stone" aria-hidden="true"><span class="stone-label">2</span></div>
+        </div> 
+        <div class="torch" data-id="3" title="Stone 3 (always active)" aria-label="Stone 3">
+            <div class="stone" aria-hidden="true"><span class="stone-label">3</span></div>
+        </div> 
+        <div class="torch" data-id="4" title="Stone 4" aria-label="Stone 4">
+            <div class="stone" aria-hidden="true"><span class="stone-label">4</span></div>
+        </div> 
+        <div class="torch" data-id="5" title="Stone 5" aria-label="Stone 5">
+            <div class="stone" aria-hidden="true"><span class="stone-label">5</span></div>
+        </div> 
+        <div class="torch" data-id="6" title="Stone 6" aria-label="Stone 6">
+            <div class="stone" aria-hidden="true"><span class="stone-label">6</span></div>
+        </div> 
+        <div class="torch" data-id="7" title="Stone 7" aria-label="Stone 7">
+            <div class="stone" aria-hidden="true"><span class="stone-label">7</span></div>
+        </div> 
+        <div class="torch" data-id="8" title="Stone 8" aria-label="Stone 8">
+            <div class="stone" aria-hidden="true"><span class="stone-label">8</span></div>
+        </div> 
+    </div>
+
+    <div class="modal" id="modal" role="dialog" aria-modal="true" aria-hidden="true">
+        <h2>✅ Safe opened</h2>
+        <p>The torches are aligned — the safe swings open revealing its secrets.</p>
+        <button id="close">Close</button>
+    </div>
+
+    <script>
+        (function(){
+            const expected = [3,7,5,8,1,4,6,2];
+            // log holds the order that torches were lit (starting with 3 which is pre-lit)
+            let log = [3];
+            const torches = Array.from(document.querySelectorAll('.torch'));
+            const modal = document.getElementById('modal');
+            const closeBtn = document.getElementById('close');
+            const row = document.querySelector('.torch-row');
+            const alwaysLit = 3;
+
+            function light(id){
+                const t = torches.find(x=>+x.dataset.id===id);
+                if(!t) return;
+                t.classList.add('lit');
+                t.classList.add('disabled');
+            }
+            function extinguishAll(){
+                torches.forEach(t=>{
+                    const id = +t.dataset.id;
+                    if(id!==alwaysLit){t.classList.remove('lit');t.classList.remove('disabled')}
+                });
+                log = [alwaysLit];
+            }
+
+            // initialize: torch 3 is always lit
+            light(alwaysLit);
+
+            torches.forEach(t=>{
+                t.addEventListener('click', (ev)=>{
+                    const id = +t.dataset.id;
+                    if(id===alwaysLit) return; // cannot toggle the always-lit torch
+                    if(t.classList.contains('lit')) return; // already lit
+
+                    // Light it and record order; every click behaves the same
+                    light(id);
+                    log.push(id);
+
+                    // If all torches are lit, check final sequence
+                    if(log.length >= expected.length){
+                        const correct = expected.every((v,i)=>v === log[i]);
+                        if(correct){
+                            // success
+                            setTimeout(()=>{
+                                modal.classList.add('show');
+                                modal.setAttribute('aria-hidden','false');
+                            },220);
+                        } else {
+                            // full sequence wrong: shake row and reset after brief pause
+                            row.classList.add('bad-sequence');
+                            setTimeout(()=> row.classList.remove('bad-sequence'),700);
+                            setTimeout(()=>{
+                                extinguishAll();
+                            },800);
+                        }
+                    }
+                });
+            });
+
+            closeBtn.addEventListener('click', ()=>{
+                modal.classList.remove('show');
+                modal.setAttribute('aria-hidden','true');
+                // after closing, keep the current success state (do not auto-reset)
+            });
+
+            // accessibility: allow keyboard control
+            document.addEventListener('keydown', (e)=>{
+                // close modal with Escape
+                if(e.key === 'Escape' && modal.classList.contains('show')){
+                    modal.classList.remove('show');modal.setAttribute('aria-hidden','true');
+                }
+            });
+        })();
+    </script>
 </body>
 </html>
