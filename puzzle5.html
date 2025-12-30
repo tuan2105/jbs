@@ -3,10 +3,412 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Puzzle 5</title>
+    <title>Cosmic Cipher</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+        :root {
+            --text-color: #a0ccdb;
+            --accent-color: #00f3ff;
+            --cell-size: 55px;
+            --glass-bg: rgba(12, 20, 35, 0.65);
+            --glass-border: 1px solid rgba(0, 243, 255, 0.2);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+        }
+
+        body {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Prevent scrollbars from stars */
+            background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+            position: relative;
+        }
+
+        /* --- COSMOS BACKGROUND ANIMATION --- */
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0;
+            animation: twinkle var(--duration) ease-in-out infinite;
+            animation-delay: var(--delay);
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0; transform: scale(0.5); }
+            50% { opacity: var(--opacity); transform: scale(1); box-shadow: 0 0 10px white; }
+            100% { opacity: 0; transform: scale(0.5); }
+        }
+
+        /* --- UI LAYER (Z-Index to sit above stars) --- */
+        .ui-layer {
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        /* --- SECTION 1: THE BIG NUMBER --- */
+        .big-number {
+            font-size: 7rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 20px var(--accent-color), 0 0 50px var(--accent-color);
+            margin-bottom: 20px;
+            letter-spacing: 5px;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* --- SECTION 2: THE GRID --- */
+        .grid-frame {
+            padding: 20px;
+            border-radius: 15px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: var(--glass-border);
+            box-shadow: var(--glass-shadow);
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 40px repeat(6, var(--cell-size));
+            grid-template-rows: 40px repeat(6, var(--cell-size));
+            gap: 6px;
+        }
+
+        .label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #5d6d7e;
+        }
+
+        .label.special {
+            color: #f1c40f;
+            font-size: 1.5rem;
+            text-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+        }
+
+        /* The Diagonal T Corner */
+        .label.corner {
+            position: relative;
+            background: linear-gradient(135deg, transparent 48%, var(--accent-color) 49%, var(--accent-color) 51%, transparent 52%);
+        }
+        .label.corner span {
+            position: absolute;
+            top: 2px;
+            left: 6px;
+            color: #f1c40f;
+            font-size: 1rem;
+        }
+
+        .cell {
+            width: var(--cell-size);
+            height: var(--cell-size);
+            background-color: rgba(30, 40, 55, 0.6);
+            border-radius: 4px;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s;
+        }
+
+        .cell:hover {
+            border-color: var(--accent-color);
+            background-color: rgba(0, 243, 255, 0.1);
+        }
+
+        .cell.marked {
+            /* Keep internal color somewhat transparent for neon effect */
+            background-color: rgba(0,0,0,0.3) !important;
+            border-width: 2px;
+        }
+
+        /* --- SECTION 3: THE LOCK --- */
+        .lock-section {
+            margin-top: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .inputs-container {
+            display: flex;
+            gap: 15px;
+            padding: 15px 30px;
+            border-radius: 50px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: var(--glass-border);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        input[type="number"] {
+            width: 60px;
+            height: 60px;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid var(--accent-color);
+            color: #fff;
+            font-size: 2.5rem;
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+            outline: none;
+            text-shadow: 0 0 10px var(--accent-color);
+        }
+
+        /* Hide Spinners */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        button {
+            background: rgba(0, 243, 255, 0.1);
+            color: var(--accent-color);
+            border: 1px solid var(--accent-color);
+            padding: 12px 50px;
+            font-size: 1.2rem;
+            font-family: 'Orbitron', sans-serif;
+            border-radius: 30px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            transition: all 0.3s;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+        }
+
+        button:hover {
+            background: var(--accent-color);
+            color: #000;
+            box-shadow: 0 0 30px var(--accent-color);
+        }
+
+        /* Home button (top-left) */
+        .home-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 50;
+            background: rgba(0, 243, 255, 0.06);
+            color: var(--accent-color);
+            border: 1px solid rgba(0, 243, 255, 0.18);
+            padding: 8px 14px;
+            font-size: 0.95rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            letter-spacing: 1px;
+            transition: transform 0.2s, background 0.2s, color 0.2s;
+            box-shadow: 0 0 10px rgba(0,243,255,0.06);
+        }
+
+        .home-btn:hover {
+            background: var(--accent-color);
+            color: #000;
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px var(--accent-color);
+        }
+
+        @media (max-width: 480px) {
+            .home-btn { top: 12px; left: 12px; padding: 6px 10px; font-size: 0.85rem; }
+        }
+
+        #message {
+            height: 20px;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        .visible { opacity: 1 !important; }
+        .success-text { color: #2ecc71; text-shadow: 0 0 10px #2ecc71; }
+        .error-text { color: #e74c3c; text-shadow: 0 0 10px #e74c3c; }
+
+    </style>
 </head>
 <body>
-    <h1>Puzzle 5</h1>
-    <p>This puzzle page is empty. Go back to <a href="index.html">Puzzle List</a>.</p>
+
+    <div id="cosmos"></div>
+
+    <a href="index.html" class="home-btn" aria-label="Home">Home</a>
+
+    <div class="ui-layer">
+        <div class="big-number">14</div>
+
+        <div class="grid-frame">
+            <div class="grid-container">
+                <div class="label corner special"><span>T</span></div>
+                <div class="label">2</div>
+                <div class="label">0</div>
+                <div class="label special">F</div>
+                <div class="label">2</div>
+                <div class="label">1</div>
+                <div class="label">3</div>
+
+                <div class="label">1</div>
+                <div class="cell" data-r="1" data-c="1"></div>
+                <div class="cell" data-r="1" data-c="2"></div>
+                <div class="cell" data-r="1" data-c="3"></div>
+                <div class="cell" data-r="1" data-c="4"></div>
+                <div class="cell" data-r="1" data-c="5"></div>
+                <div class="cell" data-r="1" data-c="6"></div>
+
+                <div class="label">5</div>
+                <div class="cell" data-r="2" data-c="1"></div>
+                <div class="cell" data-r="2" data-c="2"></div>
+                <div class="cell" data-r="2" data-c="3"></div>
+                <div class="cell" data-r="2" data-c="4"></div>
+                <div class="cell" data-r="2" data-c="5"></div>
+                <div class="cell" data-r="2" data-c="6"></div>
+
+                <div class="label">2</div>
+                <div class="cell" data-r="3" data-c="1"></div>
+                <div class="cell" data-r="3" data-c="2"></div>
+                <div class="cell" data-r="3" data-c="3"></div>
+                <div class="cell" data-r="3" data-c="4"></div>
+                <div class="cell" data-r="3" data-c="5"></div>
+                <div class="cell" data-r="3" data-c="6"></div>
+
+                <div class="label special">S</div>
+                <div class="cell" data-r="4" data-c="1"></div>
+                <div class="cell" data-r="4" data-c="2"></div>
+                <div class="cell" data-r="4" data-c="3"></div>
+                <div class="cell" data-r="4" data-c="4"></div>
+                <div class="cell" data-r="4" data-c="5"></div>
+                <div class="cell" data-r="4" data-c="6"></div>
+
+                <div class="label">4</div>
+                <div class="cell" data-r="5" data-c="1"></div>
+                <div class="cell" data-r="5" data-c="2"></div>
+                <div class="cell" data-r="5" data-c="3"></div>
+                <div class="cell" data-r="5" data-c="4"></div>
+                <div class="cell" data-r="5" data-c="5"></div>
+                <div class="cell" data-r="5" data-c="6"></div>
+
+                <div class="label">1</div>
+                <div class="cell" data-r="6" data-c="1"></div>
+                <div class="cell" data-r="6" data-c="2"></div>
+                <div class="cell" data-r="6" data-c="3"></div>
+                <div class="cell" data-r="6" data-c="4"></div>
+                <div class="cell" data-r="6" data-c="5"></div>
+                <div class="cell" data-r="6" data-c="6"></div>
+            </div>
+        </div>
+
+        <div class="lock-section">
+            <div class="inputs-container">
+                <input type="number" id="in-f" placeholder="0">
+                <input type="number" id="in-s" placeholder="0">
+                <input type="number" id="in-t" placeholder="0">
+            </div>
+            <button onclick="checkLock()">UNLOCK</button>
+            <div id="message">ACCESS GRANTED</div>
+        </div>
+    </div>
+
+    <script>
+        // --- COSMOS GENERATOR ---
+        function createStars() {
+            const body = document.body;
+            const starCount = 150; // Number of stars
+
+            for(let i=0; i<starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                
+                // Random Positioning
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                
+                // Random Size (Depth effect)
+                const size = Math.random() * 3;
+                
+                // Random Animation Timing
+                const duration = Math.random() * 3 + 2; // 2s to 5s
+                const delay = Math.random() * 5;
+                const opacity = Math.random() * 0.7 + 0.3;
+
+                star.style.left = x + '%';
+                star.style.top = y + '%';
+                star.style.width = size + 'px';
+                star.style.height = size + 'px';
+                star.style.setProperty('--duration', duration + 's');
+                star.style.setProperty('--delay', delay + 's');
+                star.style.setProperty('--opacity', opacity);
+
+                body.appendChild(star);
+            }
+        }
+        
+        createStars();
+
+        // --- PUZZLE INTERACTION ---
+        
+        // Neon Colors for Marked Cells
+        const neonColors = [
+            '#ff0055', '#00ff99', '#00ccff', '#ffcc00', '#d600ff', '#ff5e00'
+        ];
+
+        const cells = document.querySelectorAll('.cell');
+        
+        cells.forEach((cell, index) => {
+            const color = neonColors[index % neonColors.length];
+            
+            cell.addEventListener('click', () => {
+                cell.classList.toggle('marked');
+                if(cell.classList.contains('marked')) {
+                    cell.style.borderColor = color;
+                    cell.style.boxShadow = `0 0 15px ${color}, inset 0 0 10px ${color}`;
+                } else {
+                    cell.style.borderColor = "";
+                    cell.style.boxShadow = "";
+                }
+            });
+        });
+
+        function checkLock() {
+            const f = document.getElementById('in-f').value;
+            const s = document.getElementById('in-s').value;
+            const t = document.getElementById('in-t').value;
+            const msg = document.getElementById('message');
+            const box = document.querySelector('.inputs-container');
+
+            // Logic: F=6, S=1, T=1 (Diagonal count)
+            if (f == 6 && s == 1 && t == 1) {
+                msg.textContent = "SEQUENCE VERIFIED - SYSTEM UNLOCKED";
+                msg.className = "success-text visible";
+                box.style.border = "1px solid #2ecc71";
+                box.style.boxShadow = "0 0 30px #2ecc71";
+            } else {
+                msg.textContent = "INVALID SEQUENCE";
+                msg.className = "error-text visible";
+                box.style.border = "1px solid #e74c3c";
+                
+                // Shake Animation
+                const lock = document.querySelector('.lock-section');
+                lock.animate([
+                    { transform: 'translateX(0)' }, 
+                    { transform: 'translateX(-10px)' }, 
+                    { transform: 'translateX(10px)' }, 
+                    { transform: 'translateX(0)' }
+                ], { duration: 300 });
+            }
+        }
+    </script>
 </body>
 </html>
