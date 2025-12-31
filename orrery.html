@@ -1,584 +1,496 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Interactive Orrery — Sun • Earth • Moon</title>
-  <style>
-    :root{
-      --size: min(90vmin, 720px);
-      --sun: #ffcc33;
-      --earth: #2ea0f5;
-      --moon: #cfcfcf;
-      --orbit: rgba(255,255,255,0.08);
-      --bg: #0b1220;
-      --fg: #e6eef8;
-    }
-    html,body{height:100%;}
-    body{
-      margin:0;
-      background: radial-gradient(circle at 10% 10%, #071026 0%, var(--bg) 40%);
-      color:var(--fg);
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:24px;
-    }
-    .page{
-      width:var(--size);
-      max-width:95vw;
-      text-align:center;
-    }
-    h1{margin:0 0 8px;font-size:1.25rem}
-    p.lead{margin:8px 0 18px;color:rgba(230,238,248,0.8)}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Stellar Lab</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Segoe UI', Roboto, sans-serif; }
+        canvas { display: block; }
+        
+        /* Popups */
+        .event-popup {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            padding: 30px 50px; border-radius: 12px; font-size: 1.5rem; font-weight: bold;
+            text-transform: uppercase; text-align: center; letter-spacing: 2px;
+            display: none; pointer-events: none; z-index: 100;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: rgba(0, 15, 30, 0.95); border: 2px solid;
+            backdrop-filter: blur(10px);
+        }
+        #popup-1 { color: #00ff88; border-color: #00ff88; box-shadow: 0 0 60px rgba(0, 255, 136, 0.4); }
+        #popup-2 { color: #0088ff; border-color: #0088ff; box-shadow: 0 0 60px rgba(0, 136, 255, 0.4); }
+        #popup-3 { color: #ffaa00; border-color: #ffaa00; box-shadow: 0 0 60px rgba(255, 170, 0, 0.4); }
+        #popup-4 { color: #ff0044; border-color: #ff0044; box-shadow: 0 0 60px rgba(255, 0, 68, 0.4); }
+        #popup-5 { color: #aa00ff; border-color: #aa00ff; box-shadow: 0 0 100px rgba(160, 0, 255, 0.8); background: #110022; font-size: 2.5rem; animation: shake 0.5s infinite; }
+        
+        @keyframes popIn { 0% { transform: translate(-50%, -50%) scale(0.5); opacity:0; } 100% { transform: translate(-50%, -50%) scale(1); opacity:1; } }
+        @keyframes shake { 0% { transform: translate(-51%, -50%); } 25% { transform: translate(-49%, -51%); } 50% { transform: translate(-50%, -49%); } 75% { transform: translate(-51%, -51%); } 100% { transform: translate(-50%, -50%); } }
 
-    .orrery-wrap{
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.05));
-      border-radius:12px;
-      padding:18px;
-      box-shadow: 0 6px 30px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
-    }
+        /* UI Panel */
+        #ui-container {
+            position: absolute; top: 20px; right: 20px; width: 360px;
+            color: #eee; background: rgba(5, 10, 18, 0.9); backdrop-filter: blur(20px);
+            border: 1px solid rgba(100, 200, 255, 0.15); padding: 20px; border-radius: 12px;
+            max-height: 90vh; overflow-y: auto; user-select: none; pointer-events: auto; z-index: 10;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.8);
+        }
+        #ui-container::-webkit-scrollbar { width: 4px; }
+        #ui-container::-webkit-scrollbar-thumb { background: #44aaff; border-radius: 2px; }
 
-    /* SVG sizing */
-    .orrery{
-      width:100%;
-      height:var(--size);
-      max-height:80vh;
-      display:block;
-      margin:0 auto 12px auto;
-      touch-action: none; /* we'll handle touch gestures */
-    }
+        h1 { margin: 0 0 10px 0; font-size: 1.1rem; color: #44aaff; text-align: center; text-transform: uppercase; letter-spacing: 3px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        
+        #date-box { text-align: center; background: rgba(0,0,0,0.4); border: 1px solid rgba(68,170,255,0.2); padding: 10px; border-radius: 6px; margin-bottom: 15px; }
+        #current-date { display: block; font-size: 1.3rem; font-weight: 800; color: #ffaa00; text-transform: uppercase; letter-spacing: 1px; }
 
-    .controls{
-      display:flex;
-      gap:8px;
-      align-items:center;
-      justify-content:center;
-      flex-wrap:wrap;
-      margin-top:8px;
-    }
-    .controls .group{display:flex;gap:8px;align-items:center}
-    button{background:#142034;color:var(--fg);border:1px solid rgba(255,255,255,0.04);padding:6px 10px;border-radius:8px;cursor:pointer}
-    button:active{transform:translateY(1px)}
-    input[type=range]{width:220px}
-    .hint{font-size:0.85rem;color:rgba(230,238,248,0.7);margin-top:8px}
+        .mode-switch { display: flex; background: rgba(0,0,0,0.4); border-radius: 6px; padding: 4px; margin-bottom: 15px; }
+        .mode-option { flex: 1; text-align: center; padding: 8px; font-size: 0.8rem; cursor: pointer; border-radius: 4px; font-weight: bold; color: #777; transition: 0.3s; }
+        .mode-option.active { background: linear-gradient(135deg, #44aaff, #2266aa); color: white; box-shadow: 0 2px 10px rgba(34,102,170,0.5); }
 
-    /* a little label for the center */
-    .legend{display:flex;gap:12px;align-items:center;justify-content:center;margin-top:10px}
-    .legend span{font-size:0.85rem;color:rgba(230,238,248,0.8)}
+        .control-row { display: flex; align-items: center; margin-bottom: 10px; gap: 8px; }
+        .label-group { flex: 1; }
+        label { display: block; font-size: 0.7rem; color: #88aacc; margin-bottom: 4px; font-weight: 600; text-transform: uppercase; }
+        input[type=range] { width: 100%; cursor: pointer; accent-color: #44aaff; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; }
+        
+        .toggle-btn { background: rgba(100, 150, 255, 0.1); border: 1px solid rgba(100, 150, 255, 0.3); color: #44aaff; cursor: pointer; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .toggle-btn:hover { background: rgba(100, 150, 255, 0.3); box-shadow: 0 0 10px rgba(68,170,255,0.5); }
+        .toggle-btn.off { color: #555; background: rgba(0,0,0,0.2); border-color: #333; box-shadow: none; }
 
-    /* 3D and visual helpers */
-    .orrery-wrap{perspective:1400px}
-    :root{ --tiltX: 18deg; --tiltY: 0deg }
-    .orrery-3d{transform-style:preserve-3d;transition:transform 220ms cubic-bezier(.2,.9,.3,1); transform:rotateX(var(--tiltX)) rotateY(var(--tiltY)); transform-origin:50% 50%;}
-    .orrery-3d:active{transition:none}
-    .orbit{stroke:rgba(255,255,255,0.05);stroke-width:1.2;filter:blur(0.2px)}
-    .orbit:hover{stroke:rgba(255,255,255,0.12)}
-    .planet{filter:url(#tinyGlow);cursor:pointer}
-    .planet .shine{fill:rgba(255,255,255,0.7);opacity:0.13;mix-blend-mode:screen}
+        #distance-calc { background: rgba(0,20,40,0.6); border: 1px solid rgba(68,170,255,0.2); padding: 12px; border-radius: 8px; margin-bottom: 15px; }
+        .calc-row { display: flex; gap: 10px; margin-bottom: 5px; }
+        select { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid #44aaff; color: white; border-radius: 4px; font-size: 0.8rem; padding: 4px; }
+        #distance-result { text-align: center; font-weight: bold; color: #00ff88; font-size: 1rem; letter-spacing: 1px; }
+        
+        /* HUD Markers */
+        #hud-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 5; }
+        .hud-marker {
+            position: absolute; width: 40px; height: 40px; border: 1px solid rgba(0, 255, 136, 0.6); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; opacity: 0.8;
+            font-size: 10px; color: #00ff88; font-family: monospace; text-shadow: 0 0 2px black;
+            transition: opacity 0.2s; box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+        }
+        .hud-marker::after { content: ''; position: absolute; width: 4px; height: 4px; background: #00ff88; border-radius: 50%; }
+        .hud-label { position: absolute; top: -20px; white-space: nowrap; font-weight: bold; background: rgba(0,0,0,0.8); padding: 3px 6px; border-radius: 4px; border: 1px solid rgba(0,255,136,0.3); }
 
-    /* volumetric helpers */
-    .shadow{fill:rgba(0,0,0,0.22);filter:blur(3px);opacity:0.95}
-    .atmosphere{opacity:0.25;mix-blend-mode:screen;filter:blur(2px)}
-    .starburst line{stroke:#fff6d8;stroke-width:1.2;opacity:0.95;stroke-linecap:round}
-    .starburst .ray{filter:url(#glowFilter)}
-
-    /* comet tail */
-    .comet-tail{opacity:0.95;filter:url(#tinyGlow)}
-
-    .comet-core{fill:url(#cometCoreGradient)}
-    .supernova-core{fill:url(#supernovaGradient);filter:url(#glowFilter)}
-
-    /* supernova burst */
-    .supernova{transform-origin:center;cursor:pointer;filter:url(#glowFilter)}
-    .supernova.burst{animation:supernova-burst 1200ms ease-out forwards}
-    @keyframes supernova-burst{0%{transform:scale(1);opacity:1}70%{transform:scale(6);opacity:0.95}100%{transform:scale(10);opacity:0}}
-
-    /* aurora / geomagnetic storm */
-    .aurora{stroke-linecap:round;stroke-width:3;fill:none;opacity:0;transition:opacity 220ms}
-    .aurora.active{opacity:0.95;filter:blur(1px);mix-blend-mode:screen}
-
-    /* outer rings */
-    .ring{fill:none;stroke:rgba(255,255,255,0.035);stroke-width:1;stroke-dasharray:4 6}
-    .ring.handle:hover{stroke:rgba(120,170,255,0.16);cursor:pointer}
-
-    .legend span{opacity:0.95}
-
-    /* accessibility focus styles */
-    button:focus, input[type=range]:focus{outline:2px solid rgba(120,170,255,0.35);outline-offset:3px}
-  </style>
+        #toggle-ui-btn { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; background: #0a1018; border: 1px solid #4af; color: white; cursor: pointer; border-radius: 8px; z-index: 1000; display: none; pointer-events: auto; font-size: 1.2rem; }
+        #reset-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, #2266aa, #114488); border: none; color: white; border-radius: 6px; cursor: pointer; margin-top: 10px; font-weight: bold; letter-spacing: 1px; }
+    </style>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
 </head>
 <body>
-  <main class="page">
-    <h1>Interactive Orrery — <small>Sun • Earth • Moon</small></h1>
-    <p class="lead">Drag inside the model (or use the controls) to rotate the system. The orrery won't move on its own — you rotate it manually.</p>
 
-    <div class="orrery-wrap">
-      <!-- SVG orrery -->
-      <svg id="orrery" class="orrery" viewBox="-360 -360 720 720" aria-label="Orrery showing Sun, Earth, and Moon" role="img">
-        <!-- Background grid / stars (subtle) -->
-        <defs>
-          <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="rgba(255,220,120,0.98)"/>
-            <stop offset="45%" stop-color="rgba(255,200,60,0.65)"/>
-            <stop offset="100%" stop-color="rgba(255,180,40,0.04)"/>
-          </radialGradient>
+    <div id="popup-1" class="event-popup">✨ Travel Location Found</div>
+    <div id="popup-2" class="event-popup">🚀 Travel Location 2 Found</div>
+    <div id="popup-3" class="event-popup">⚡ Travel Location 3 Found</div>
+    <div id="popup-4" class="event-popup">🌑 Travel Location 4 Found</div>
+    <div id="popup-5" class="event-popup">💀 DOOMSDAY FOUND</div>
+    
+    <div id="hud-layer"></div>
+    <button id="toggle-ui-btn" onclick="toggleUI(true)">☰</button>
 
-          <radialGradient id="earthGradient" cx="40%" cy="35%" r="65%">
-            <stop offset="0%" stop-color="#bfe9ff"/>
-            <stop offset="35%" stop-color="#70c9ff"/>
-            <stop offset="70%" stop-color="#2ea0f5"/>
-            <stop offset="100%" stop-color="#083b58"/>
-          </radialGradient>
-
-          <radialGradient id="moonGradient" cx="40%" cy="40%" r="75%">
-            <stop offset="0%" stop-color="#ffffff"/>
-            <stop offset="60%" stop-color="#d0d0d0"/>
-            <stop offset="100%" stop-color="#9a9a9a"/>
-          </radialGradient>
-
-          <linearGradient id="auroraGradient" x1="0" x2="1">
-            <stop offset="0%" stop-color="#a1ffce" stop-opacity="0.95"/>
-            <stop offset="45%" stop-color="#5ef1ff" stop-opacity="0.95"/>
-            <stop offset="100%" stop-color="#9b8bff" stop-opacity="0.85"/>
-          </linearGradient>
-
-          <filter id="glowFilter" x="-60%" y="-60%" width="220%" height="220%">
-            <feGaussianBlur stdDeviation="6" result="b"/>
-            <feMerge>
-              <feMergeNode in="b"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-
-          <filter id="tinyGlow" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="2" result="b"/>
-            <feMerge>
-              <feMergeNode in="b"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-
-          <radialGradient id="cometCoreGradient" cx="40%" cy="40%" r="60%">
-            <stop offset="0%" stop-color="#ffffff"/>
-            <stop offset="60%" stop-color="#dbeeff"/>
-            <stop offset="100%" stop-color="#bcd8ff" stop-opacity="0.95"/>
-          </radialGradient>
-
-          <radialGradient id="supernovaGradient" cx="50%" cy="50%" r="60%">
-            <stop offset="0%" stop-color="#ffffff"/>
-            <stop offset="35%" stop-color="#fff2c7"/>
-            <stop offset="65%" stop-color="#ffb36b"/>
-            <stop offset="100%" stop-color="#ff704d" stop-opacity="0.0"/>
-          </radialGradient>
-
-          <radialGradient id="atmosphereGradient" cx="50%" cy="35%" r="70%">
-            <stop offset="0%" stop-color="#e6fbff" stop-opacity="0.95"/>
-            <stop offset="100%" stop-color="#9de6ff" stop-opacity="0.02"/>
-          </radialGradient>
-
-          <!-- subtle specular lighting for planets -->
-          <filter id="specular" x="-40%" y="-40%" width="180%" height="180%">
-            <feSpecularLighting result="specOut" specularConstant="0.8" specularExponent="16" lighting-color="#ffffff">
-              <fePointLight x="-100" y="-100" z="200" />
-            </feSpecularLighting>
-            <feComposite in="specOut" in2="SourceGraphic" operator="arithmetic" k1="0" k2="1" k3="1" k4="0"/>
-          </filter>
-        </defs>
-
-        <!-- Central sun (drawn separately so it doesn't rotate, visually fixed) -->
-        <g id="sun" aria-hidden="true">
-          <circle class="sunGlow" cx="0" cy="0" r="60" fill="rgba(255,200,80,0.06)"/>
-          <circle cx="0" cy="0" r="36" fill="url(#sunGlow)" stroke="#ffd76b" stroke-width="2.5"></circle>
-          <circle cx="0" cy="0" r="18" fill="var(--sun)"></circle>
-          <ellipse class="shadow" cx="12" cy="18" rx="14" ry="6" opacity="0.08"></ellipse>
-        </g>
-
-        <!-- Everything that should rotate when user drags is in this group -->
-        <g id="rot-group">
-          <!-- Primary Orbits -->
-          <circle class="orbit" cx="0" cy="0" r="180" fill="none" stroke="var(--orbit)" stroke-width="1.4"></circle>
-          <circle class="orbit" cx="0" cy="0" r="260" fill="none" stroke="var(--orbit)" stroke-width="0.9" opacity="0.8"></circle>
-
-          <!-- Outer rings for added elements -->
-          <circle id="cometRing" class="ring handle" cx="0" cy="0" r="320" fill="none" aria-hidden="true"></circle>
-          <circle id="supernovaRing" class="ring handle" cx="0" cy="0" r="380" fill="none" aria-hidden="true"></circle>
-
-          <!-- Earth group: rotate(earthAngle) translate(earthRadius,0) -->
-          <g id="earthGroup">
-            <!-- Earth's orbit marker (small disk at orbit position) -->
-            <g id="earthPos">
-                <ellipse class="shadow" cx="6" cy="12" rx="10" ry="4" opacity="0.22"/>
-              <circle class="planet" cx="0" cy="0" r="12" fill="url(#earthGradient)" stroke="#0e4e7a" stroke-width="1.2" filter="url(#specular)"></circle>
-              <circle class="atmosphere" cx="0" cy="0" r="15" fill="url(#atmosphereGradient)" opacity="0.22"></circle>
-              <circle class="shine" cx="-4" cy="-4" r="3" fill="rgba(255,255,255,0.9)" opacity="0.12"></circle>
-              <text x="18" y="5" font-size="12" fill="rgba(230,238,248,0.85)">Earth</text>
-            </g>
-
-            <!-- Moon group positioned relative to Earth -->
-            <g id="moonGroup">
-              <ellipse class="shadow" cx="3" cy="6" rx="5" ry="2.2" opacity="0.24"/>
-              <circle class="planet" cx="0" cy="0" r="6" fill="url(#moonGradient)" stroke="#9e9e9e" stroke-width="0.8"/>
-            </g>
-
-            <!-- Geomagnetic storm (aurora) group placed around Earth -->
-            <g id="stormGroup" aria-hidden="true">
-              <!-- layered aurora arcs for depth -->
-              <g class="aurora-layer">
-                <path class="aurora" id="aurora1" d="M -30 -28 Q 0 -56 30 -28" stroke="url(#auroraGradient)"></path>
-                <path class="aurora" id="aurora1b" d="M -34 -26 Q 0 -52 34 -26" stroke="url(#auroraGradient)" opacity="0.6"></path>
-              </g>
-              <g class="aurora-layer">
-                <path class="aurora" id="aurora2" d="M -36 -20 Q 0 -48 36 -20" stroke="url(#auroraGradient)"></path>
-                <path class="aurora" id="aurora2b" d="M -40 -18 Q 0 -44 40 -18" stroke="url(#auroraGradient)" opacity="0.6"></path>
-              </g>
-              <g class="aurora-layer">
-                <path class="aurora" id="aurora3" d="M -24 -34 Q 0 -64 24 -34" stroke="url(#auroraGradient)"></path>
-                <path class="aurora" id="aurora3b" d="M -28 -32 Q 0 -60 28 -32" stroke="url(#auroraGradient)" opacity="0.6"></path>
-              </g>
-            </g>
-          </g>
-
-          <!-- Comet group on outer ring -->
-          <g id="cometGroup">
-            <g id="cometPos" transform="rotate(60) translate(320, 0)">
-              <g id="cometTail" class="comet-tail">
-                <path d="M -36 6 C -120 14 -160 40 -200 90 L -144 30 C -120 10 -88 2 -48 2" fill="rgba(200,220,255,0.06)" />
-                <path d="M -28 4 C -60 12 -96 28 -140 64" stroke="rgba(200,220,255,0.18)" stroke-width="3" fill="none" stroke-linecap="round"></path>
-              </g>
-              <ellipse class="shadow" cx="3" cy="5" rx="6" ry="2.6" opacity="0.3"/>
-              <circle id="cometCore" class="comet-core" cx="0" cy="0" r="6" stroke="#bcd8ff" stroke-width="0.8"></circle>
-            </g>
-          </g>
-
-          <!-- Supernova (a distant star on outermost ring) -->
-          <g id="supernovaGroup">
-            <g id="supernovaPos" transform="rotate(230) translate(380, 0)">
-              <g id="supernova" class="supernova">
-                <circle class="supernova-core" r="8" fill="url(#supernovaGradient)" stroke="#ffd88f" stroke-width="0.8" opacity="0.98"/>
-                <circle r="18" fill="rgba(255,210,120,0.06)"/>
-                <g class="starburst" aria-hidden="true">
-                  <!-- several rays rotated for volumetric look -->
-                  <line x1="0" y1="-10" x2="0" y2="-30" class="ray"/>
-                  <line x1="0" y1="10" x2="0" y2="30" class="ray"/>
-                  <line x1="-10" y1="0" x2="-30" y2="0" class="ray"/>
-                  <line x1="10" y1="0" x2="30" y2="0" class="ray"/>
-                  <line x1="-8" y1="-8" x2="-24" y2="-24" class="ray"/>
-                  <line x1="8" y1="-8" x2="24" y2="-24" class="ray"/>
-                  <line x1="-8" y1="8" x2="-24" y2="24" class="ray"/>
-                  <line x1="8" y1="8" x2="24" y2="24" class="ray"/>
-                </g>
-              </g>
-            </g>
-          </g>
-
-        </g>
-
-      </svg>
-
-      <div class="controls" aria-hidden="false">
-        <div class="group">
-          <button id="rotateLeft" title="Rotate left">⟲</button>
-          <button id="rotateRight" title="Rotate right">⟳</button>
-          <button id="resetBtn" title="Reset rotation">Reset</button>
+    <div id="ui-container">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h1>Stellar Lab</h1>
+            <button onclick="toggleUI(false)" style="background:none; border:none; color:#666; font-weight:bold; cursor:pointer;">_</button>
         </div>
 
-        <div class="group" style="min-width:260px;">
-          <label for="rotationRange" style="font-size:0.85rem">Rotation</label>
-          <input id="rotationRange" type="range" min="0" max="360" value="0" step="1" aria-label="Rotate system"/>
+        <div id="date-box">
+            <span id="date-label">ORBITAL DATE</span>
+            <span id="current-date">MARCH 31</span>
         </div>
 
-        <div class="group" style="min-width:240px;">
-          <label for="moonRange" style="font-size:0.85rem">Moon angle</label>
-          <input id="moonRange" type="range" min="0" max="360" value="60" step="1" aria-label="Rotate moon around Earth"/>
+        <div class="mode-switch">
+            <div class="mode-option active" id="mode-cinematic" onclick="setMode('cinematic')">Cinematic</div>
+            <div class="mode-option" id="mode-scientific" onclick="setMode('scientific')">True Scale</div>
         </div>
 
-        <div class="group" style="min-width:220px;">
-          <label for="tiltXRange" style="font-size:0.85rem">Tilt X</label>
-          <input id="tiltXRange" type="range" min="-45" max="45" value="18" step="1" aria-label="Tilt orrery X axis"/>
-        </div>
-        <div class="group" style="min-width:220px;">
-          <label for="tiltYRange" style="font-size:0.85rem">Tilt Y</label>
-          <input id="tiltYRange" type="range" min="-180" max="180" value="0" step="1" aria-label="Tilt orrery Y axis"/>
-        </div>
-
-        <div class="group" style="min-width:240px;">
-          <label for="cometRange" style="font-size:0.85rem">Comet angle</label>
-          <input id="cometRange" type="range" min="0" max="360" value="60" step="1" aria-label="Rotate comet around system"/>
-          <button id="cometToggle" title="Toggle comet">Comet</button>
+        <div id="distance-calc">
+            <div style="color:#00ff88; font-size:0.7rem; font-weight:bold; margin-bottom:5px;">REAL-TIME DISTANCE (AU)</div>
+            <div class="calc-row">
+                <select id="objA"><option value="Sun">Sun</option><option value="Earth" selected>Earth</option><option value="Moon">Moon</option><option value="Comet">Comet</option><option value="Supernova">Supernova</option></select>
+                <span style="color:#aaa;">↔</span>
+                <select id="objB"><option value="Sun">Sun</option><option value="Earth">Earth</option><option value="Moon">Moon</option><option value="Comet" selected>Comet</option><option value="Supernova">Supernova</option></select>
+            </div>
+            <div id="distance-result">-- AU</div>
         </div>
 
-        <div class="group" style="min-width:260px;">
-          <label for="supernovaRange" style="font-size:0.85rem">Supernova angle</label>
-          <input id="supernovaRange" type="range" min="0" max="360" value="230" step="1" aria-label="Rotate supernova around system"/>
-          <button id="supernovaTrigger" title="Trigger supernova">Trigger</button>
+        <div class="control-row">
+            <div class="label-group"><label>Camera Focus</label><input type="range" id="sliderFocus" min="0" max="100" value="25"></div>
+        </div>
+        <hr style="border:0; border-top:1px solid rgba(255,255,255,0.1); margin:15px 0;">
+
+        <div class="control-row">
+            <div class="label-group"><label>Earth Orbit (Year)</label><input type="range" id="sliderEarthOrbit" min="0" max="360" value="90"></div>
+            <button class="toggle-btn" id="btnEarth" onclick="toggleObj('Earth')">👁</button>
+        </div>
+        <div class="control-row"><div class="label-group"><label>Earth Rotation</label><input type="range" id="sliderEarthSpin" min="0" max="360" value="90"></div></div>
+        <div class="control-row">
+            <div class="label-group"><label>Moon Orbit</label><input type="range" id="sliderMoon" min="0" max="360" value="90"></div>
+            <button class="toggle-btn" id="btnMoon" onclick="toggleObj('Moon')">👁</button>
+        </div>
+        <div class="control-row">
+            <div class="label-group"><label>Comet Path</label><input type="range" id="sliderComet" min="0" max="360" value="90"></div>
+            <button class="toggle-btn" id="btnComet" onclick="toggleObj('Comet')">👁</button>
+        </div>
+        <div class="control-row">
+            <div class="label-group"><label>Geo-Storm Direction</label><input type="range" id="sliderStorm" min="0" max="360" value="90"></div>
+            <button class="toggle-btn" id="btnStorm" onclick="toggleObj('Storm')">👁</button>
+        </div>
+        <div class="control-row">
+            <div class="label-group"><label>Supernova Orbit</label><input type="range" id="sliderSupernova" min="0" max="360" value="90"></div>
+            <button class="toggle-btn" id="btnSupernova" onclick="toggleObj('Supernova')">👁</button>
         </div>
 
-        <div class="group" style="min-width:260px;">
-          <label for="stormRange" style="font-size:0.85rem">Storm angle</label>
-          <input id="stormRange" type="range" min="0" max="360" value="0" step="1" aria-label="Rotate geomagnetic storm around Earth"/>
-          <button id="stormToggle" title="Toggle storm">Storm</button>
-        </div>
-
-        <div class="group" style="min-width:260px;">
-          <label for="stormRange" style="font-size:0.85rem">Storm angle</label>
-          <input id="stormRange" type="range" min="0" max="360" value="0" step="1" aria-label="Rotate geomagnetic storm around Earth"/>
-          <button id="stormToggle" title="Toggle storm">Storm</button>
-        </div>
-      </div>
-
-      <div class="hint">Tip: Drag the model to rotate. Use arrow buttons or the <strong>Rotation</strong> slider for precise control; use <strong>Moon angle</strong> to move the Moon around the Earth.</div>
-
-      <div class="legend">
-        <span>☀️ Sun</span>
-        <span>🌍 Earth</span>
-        <span>🌕 Moon</span>
-      </div>
+        <button id="reset-btn" onclick="resetSim()">RESET SYSTEM</button>
     </div>
 
-    <p style="font-size:0.9rem;margin-top:14px;color:rgba(230,238,248,0.75)">Made interactive with pointer drag, keyboard, and sliders. (No automatic animation.)</p>
-  </main>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 
-  <script>
-    (function(){
-      const svg = document.getElementById('orrery');
-      svg.classList.add('orrery-3d');
-      const wrap = document.querySelector('.orrery-wrap');
-      const rotGroup = document.getElementById('rot-group');
-      const earthGroup = document.getElementById('earthGroup');
-      const earthPos = document.getElementById('earthPos');
-      const moonGroup = document.getElementById('moonGroup');
+        // --- CONFIGURATION ---
+        const SCALES = {
+            cinematic: { 
+                auUnits: 40, moonDistUnits: 8, 
+                cometMinAU: 0.8, cometMaxAU: 1.2, 
+                snDist: 600,
+                earthSize: 3, moonSize: 0.8, sunSize: 6,
+                camFar: 2000, glow: 1.5
+            },
+            scientific: { 
+                auUnits: 400, 
+                moonDistUnits: 1.05, 
+                cometMinAU: 0.998, cometMaxAU: 1.01,
+                snDist: 4000,
+                earthSize: 0.3, moonSize: 0.08, sunSize: 10,
+                camFar: 8000, glow: 0.6
+            }
+        };
+        let currentMode = 'cinematic';
+        let doomsdayTimer = 0;
+        const clock = new THREE.Clock();
 
-      // New elements
-      const cometGroup = document.getElementById('cometGroup');
-      const cometPos = document.getElementById('cometPos');
-      const cometTail = document.getElementById('cometTail');
-      const cometCore = document.getElementById('cometCore');
-      const supernovaGroup = document.getElementById('supernovaGroup');
-      const supernovaEl = document.getElementById('supernova');
-      const stormGroup = document.getElementById('stormGroup');
+        // --- SCENE ---
+        const scene = new THREE.Scene(); scene.background = new THREE.Color(0x000003);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        document.body.appendChild(renderer.domElement);
 
-      const rotationRange = document.getElementById('rotationRange');
-      const moonRange = document.getElementById('moonRange');
-      const leftBtn = document.getElementById('rotateLeft');
-      const rightBtn = document.getElementById('rotateRight');
-      const resetBtn = document.getElementById('resetBtn');
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 10000);
+        camera.position.set(0, 60, 100);
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true; controls.maxDistance = 5000;
 
-      const tiltXRange = document.getElementById('tiltXRange');
-      const tiltYRange = document.getElementById('tiltYRange');
-      const cometRange = document.getElementById('cometRange');
-      const cometToggle = document.getElementById('cometToggle');
-      const supernovaRange = document.getElementById('supernovaRange');
-      const supernovaTrigger = document.getElementById('supernovaTrigger');
-      const stormRange = document.getElementById('stormRange');
-      const stormToggle = document.getElementById('stormToggle');
+        const sunLight = new THREE.PointLight(0xffffff, 3, 5000, 0.5); scene.add(sunLight);
+        scene.add(new THREE.AmbientLight(0x222244, 0.8));
 
-      // Config
-      const earthRadius = 180; // distance from center
-      const moonRadius = 34; // distance from Earth
-      const cometRadius = 320;
-      const supernovaRadius = 380;
+        const composer = new EffectComposer(renderer);
+        composer.addPass(new RenderPass(scene, camera));
+        const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.5, 0.85);
+        composer.addPass(bloom);
 
-      // State
-      let systemRotation = 0; // degrees
-      let earthAngle = 0;     // degrees around sun
-      let moonAngle = parseFloat(moonRange.value) || 60; // degrees around earth
-      let tiltXDeg = parseFloat(tiltXRange.value) || 18;
-      let tiltYDeg = parseFloat(tiltYRange.value) || 0;
-      let cometAngle = parseFloat(cometRange.value) || 60;
-      let cometVisible = true;
-      let supernovaAngle = parseFloat(supernovaRange.value) || 230;
-      let stormAngle = parseFloat(stormRange.value) || 0;
-      let stormActive = false;
-
-      // helper to set tilt
-      function updateTilt(){
-        document.documentElement.style.setProperty('--tiltX', tiltXDeg + 'deg');
-        document.documentElement.style.setProperty('--tiltY', tiltYDeg + 'deg');
-        svg.style.transform = `rotateX(${tiltXDeg}deg) rotateY(${tiltYDeg}deg)`;
-        tiltXRange.value = Math.round(tiltXDeg);
-        tiltYRange.value = Math.round(tiltYDeg);
-      }
-
-      // Tilt dragging state
-      let tilting = false;
-      let startClientX = 0, startClientY = 0, startTiltX = 0, startTiltY = 0;
-
-      // Helper: apply transforms
-      function updateTransforms(){
-        // rotate the whole system
-        rotGroup.setAttribute('transform', `rotate(${systemRotation})`);
-
-        // position earth: rotate by earthAngle then translate out
-        earthGroup.setAttribute('transform', `rotate(${earthAngle}) translate(${earthRadius}, 0)`);
-
-        // position moon relative to earth: rotate then translate
-        moonGroup.setAttribute('transform', `rotate(${moonAngle}) translate(${moonRadius}, 0)`);
-
-        // comet
-        cometPos.setAttribute('transform', `rotate(${cometAngle}) translate(${cometRadius}, 0)`);
-        // rotate tail so it appears 'trailing' (point opposite direction)
-        cometTail.setAttribute('transform', `rotate(${cometAngle+180})`);
-        cometGroup.style.display = cometVisible ? 'block' : 'none';
-
-        // supernova
-        const snPos = document.getElementById('supernovaPos');
-        snPos.setAttribute('transform', `rotate(${supernovaAngle}) translate(${supernovaRadius}, 0)`);
-
-        // storm: rotate the aurora group around the Earth
-        stormGroup.setAttribute('transform', `rotate(${stormAngle})`);
-
-        rotationRange.value = ((systemRotation % 360) + 360) % 360; // normalize to 0-360
-      }
-
-      // Initialize positions
-      earthAngle = 0;
-      updateTilt();
-      updateTransforms();
-
-      // Controls: sliders & buttons
-      rotationRange.addEventListener('input', (e)=>{
-        systemRotation = parseFloat(e.target.value);
-        updateTransforms();
-      });
-      moonRange.addEventListener('input', (e)=>{
-        moonAngle = parseFloat(e.target.value);
-        updateTransforms();
-      });
-      tiltXRange.addEventListener('input', (e)=>{ tiltXDeg = parseFloat(e.target.value); updateTilt(); });
-      tiltYRange.addEventListener('input', (e)=>{ tiltYDeg = parseFloat(e.target.value); updateTilt(); });
-
-      cometRange.addEventListener('input', (e)=>{ cometAngle = parseFloat(e.target.value); updateTransforms(); });
-      cometToggle.addEventListener('click', ()=>{ cometVisible = !cometVisible; cometToggle.classList.toggle('active', cometVisible); updateTransforms(); });
-
-      supernovaRange.addEventListener('input', (e)=>{ supernovaAngle = parseFloat(e.target.value); updateTransforms(); });
-      supernovaTrigger.addEventListener('click', ()=>{
-        // trigger burst animation
-        supernovaEl.classList.remove('burst');
-        // force reflow so animation restarts
-        void supernovaEl.offsetWidth;
-        supernovaEl.classList.add('burst');
-      });
-      supernovaEl.addEventListener('animationend', ()=>{
-        // remove burst class after animation finishes so it can be triggered again
-        supernovaEl.classList.remove('burst');
-      });
-
-      stormRange.addEventListener('input', (e)=>{ stormAngle = parseFloat(e.target.value); updateTransforms(); });
-      stormToggle.addEventListener('click', ()=>{
-        stormActive = !stormActive;
-        const auroras = document.querySelectorAll('.aurora');
-        auroras.forEach(a => a.classList.toggle('active', stormActive));
-        stormToggle.classList.toggle('active', stormActive);
-      });
-
-      leftBtn.addEventListener('click', ()=>{ systemRotation = (systemRotation - 15); updateTransforms(); });
-      rightBtn.addEventListener('click', ()=>{ systemRotation = (systemRotation + 15); updateTransforms(); });
-      resetBtn.addEventListener('click', ()=>{
-        systemRotation = 0; earthAngle = 0; moonAngle = 60; moonRange.value = moonAngle;
-        tiltXDeg = 18; tiltYDeg = 0; tiltXRange.value = tiltXDeg; tiltYRange.value = tiltYDeg; cometAngle = 60; cometRange.value = cometAngle; cometVisible = true; supernovaAngle = 230; supernovaRange.value = supernovaAngle; stormAngle = 0; stormRange.value = stormAngle; updateTilt(); updateTransforms();
-      });
-
-      leftBtn.addEventListener('click', ()=>{ systemRotation = (systemRotation - 15); updateTransforms(); });
-      rightBtn.addEventListener('click', ()=>{ systemRotation = (systemRotation + 15); updateTransforms(); });
-      resetBtn.addEventListener('click', ()=>{ systemRotation = 0; earthAngle = 0; moonAngle = 60; moonRange.value = moonAngle; tiltDeg = 18; tiltRange.value = tiltDeg; cometAngle = 60; cometRange.value = cometAngle; cometVisible = true; supernovaAngle = 230; supernovaRange.value = supernovaAngle; stormAngle = 0; stormRange.value = stormAngle; updateTilt(); updateTransforms(); });
-
-      // Keyboard: left/right arrow to rotate when any control focused
-      document.addEventListener('keydown', (ev)=>{
-        if( ev.key === 'ArrowLeft' ) { systemRotation -= 10; updateTransforms(); }
-        if( ev.key === 'ArrowRight' ) { systemRotation += 10; updateTransforms(); }
-      });
-
-      // Pointer rotation (drag to rotate the system around center)
-      let dragging = false;
-      let startAngle = 0; // radians
-      let startRotation = 0; // degrees
-
-      function getCenterClient(){
-        const r = svg.getBoundingClientRect();
-        return { x: r.left + r.width/2, y: r.top + r.height/2 };
-      }
-
-      function clientAngle(ev){
-        const center = getCenterClient();
-        const x = (ev.clientX ?? ev.touches?.[0]?.clientX) - center.x;
-        const y = (ev.clientY ?? ev.touches?.[0]?.clientY) - center.y;
-        return Math.atan2(y, x); // radians
-      }
-
-      function onPointerDown(ev){
-        ev.preventDefault();
-        // If user holds shift while pressing, enter tilt mode (X/Y), otherwise rotate
-        if(ev.shiftKey){
-          tilting = true;
-          startClientX = ev.clientX;
-          startClientY = ev.clientY;
-          startTiltX = tiltXDeg;
-          startTiltY = tiltYDeg;
-          if(ev.pointerId) svg.setPointerCapture(ev.pointerId);
-          return;
+        // --- PROCEDURAL TEXTURES ---
+        function createEarthTex() {
+            const c=document.createElement('canvas'); c.width=1024; c.height=512; const ctx=c.getContext('2d');
+            ctx.fillStyle='#000510'; ctx.fillRect(0,0,1024,512); // Deep ocean
+            for(let i=0;i<300;i++){
+                ctx.beginPath(); ctx.arc(Math.random()*1024, Math.random()*512, Math.random()*30+5, 0, 7);
+                ctx.fillStyle='#1a331a'; ctx.fill(); // Dark land
+            }
+            return new THREE.CanvasTexture(c);
+        }
+        function createCloudTex() {
+            const c=document.createElement('canvas'); c.width=1024; c.height=512; const ctx=c.getContext('2d');
+            ctx.fillStyle='rgba(0,0,0,0)'; ctx.fillRect(0,0,1024,512);
+            for(let i=0;i<500;i++){
+                ctx.beginPath(); ctx.arc(Math.random()*1024, Math.random()*512, Math.random()*40+10, 0, 7);
+                ctx.fillStyle='rgba(255,255,255,0.15)'; ctx.fill();
+            }
+            return new THREE.CanvasTexture(c);
         }
 
-        // Use pointer events if available for rotation
-        dragging = true;
-        startAngle = clientAngle(ev);
-        startRotation = systemRotation;
-        // capture if pointer events
-        if(ev.pointerId) svg.setPointerCapture(ev.pointerId);
-      }
+        // --- OBJECTS ---
+        
+        // 1. SUN
+        const sunGroup = new THREE.Group(); scene.add(sunGroup);
+        const sunMat = new THREE.MeshStandardMaterial({color:0xffaa00, emissive:0xff5500, emissiveIntensity:8});
+        const sunMesh = new THREE.Mesh(new THREE.SphereGeometry(1,64,64), sunMat);
+        sunGroup.add(sunMesh);
+        // Sun Corona (Sprites)
+        const glowTex = new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/glow.png');
+        const sunGlow = new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex, color:0xffaa00, transparent:true, opacity:0.6, blending:THREE.AdditiveBlending}));
+        sunGlow.scale.set(6,6,1); sunMesh.add(sunGlow);
 
-      function onPointerMove(ev){
-        if(tilting){
-          if(ev.clientX == null) return;
-          const dx = ev.clientX - startClientX;
-          const dy = ev.clientY - startClientY;
-          // sensitivity: 0.25 deg per px
-          tiltYDeg = startTiltY + dx * 0.25;
-          tiltXDeg = Math.max(-80, Math.min(80, startTiltX - dy * 0.25));
-          tiltXRange.value = Math.round(tiltXDeg);
-          tiltYRange.value = Math.round(tiltYDeg);
-          updateTilt();
-          return;
+        // 2. EARTH
+        const earthPivot = new THREE.Group(); scene.add(earthPivot);
+        const earthGroup = new THREE.Group(); earthPivot.add(earthGroup);
+        const earthMesh = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 64), new THREE.MeshStandardMaterial({
+            map: createEarthTex(), color: 0x4466ff, roughness:0.2, metalness:0.1
+        }));
+        earthGroup.add(earthMesh);
+        // Clouds
+        const cloudMesh = new THREE.Mesh(new THREE.SphereGeometry(1.02,64,64), new THREE.MeshStandardMaterial({
+            map: createCloudTex(), transparent:true, opacity:0.9, blending:THREE.AdditiveBlending, side:THREE.DoubleSide
+        }));
+        earthMesh.add(cloudMesh);
+        // Atmosphere
+        const atmos = new THREE.Mesh(new THREE.SphereGeometry(1.2,32,32), new THREE.MeshBasicMaterial({color:0x44aaff, transparent:true, opacity:0.1, blending:THREE.AdditiveBlending, side:THREE.BackSide}));
+        earthMesh.add(atmos);
+
+        // 3. STORM
+        const stormGroup = new THREE.Group(); earthGroup.add(stormGroup);
+        const aurGeo = new THREE.TorusGeometry(0.6, 0.15, 32, 64);
+        const aurMat = new THREE.MeshBasicMaterial({color:0x00ff88, transparent:true, opacity:0.6, blending:THREE.AdditiveBlending});
+        const aurN = new THREE.Mesh(aurGeo, aurMat); aurN.position.y=0.95; aurN.rotation.x=Math.PI/2; stormGroup.add(aurN);
+        const aurS = new THREE.Mesh(aurGeo, aurMat); aurS.position.y=-0.95; aurS.rotation.x=Math.PI/2; stormGroup.add(aurS);
+        const magMat = new THREE.LineBasicMaterial({color:0x4488ff, transparent:true, opacity:0.3, blending:THREE.AdditiveBlending});
+        for(let i=0;i<12;i++){
+            const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(new THREE.EllipseCurve(0,0,2.5,1.8,0,2*Math.PI).getPoints(50)), magMat);
+            line.rotation.x=Math.PI/2; line.rotation.y=(Math.PI/6)*i; stormGroup.add(line);
+        }
+        const windGeo = new THREE.BufferGeometry(); const windPos=[];
+        for(let i=0;i<400;i++) windPos.push(3+Math.random()*5, (Math.random()-0.5)*4, (Math.random()-0.5)*4);
+        windGeo.setAttribute('position', new THREE.Float32BufferAttribute(windPos,3));
+        const solarWind = new THREE.Points(windGeo, new THREE.PointsMaterial({color:0xffddaa, size:0.05, transparent:true, opacity:0.6, blending:THREE.AdditiveBlending}));
+        stormGroup.add(solarWind);
+
+        // 4. MOON
+        const moonPivot = new THREE.Group(); earthGroup.add(moonPivot);
+        const moonMesh = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), new THREE.MeshStandardMaterial({color:0xaaaaaa, roughness:0.9}));
+        moonPivot.add(moonMesh);
+
+        // 5. COMET
+        const cometPivot = new THREE.Group(); scene.add(cometPivot);
+        const cometGroup = new THREE.Group(); cometPivot.add(cometGroup);
+        const cHead = new THREE.Mesh(new THREE.SphereGeometry(0.6,16,16), new THREE.MeshStandardMaterial({color:0xccffff, emissive:0x0088ff}));
+        const cTail = new THREE.Mesh(new THREE.ConeGeometry(0.8, 8, 32, 1, true), new THREE.MeshBasicMaterial({color:0x44aaff, transparent:true, opacity:0.4, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide}));
+        cTail.rotation.x = -Math.PI/2; cTail.position.z = -4; 
+        cometGroup.add(cHead); cometGroup.add(cTail);
+
+        // 6. SUPERNOVA
+        const snPivot = new THREE.Group(); scene.add(snPivot);
+        const snGroup = new THREE.Group(); snPivot.add(snGroup);
+        snGroup.add(new THREE.Mesh(new THREE.IcosahedronGeometry(10, 2), new THREE.MeshBasicMaterial({color:0xff0044, wireframe:true, transparent:true})));
+        snGroup.add(new THREE.Mesh(new THREE.RingGeometry(15, 20, 64), new THREE.MeshBasicMaterial({color:0xff5500, side:THREE.DoubleSide, transparent:true, opacity:0.3, blending:THREE.AdditiveBlending})));
+
+        // 7. DOOMSDAY DUST
+        const dustGeo = new THREE.BufferGeometry(); const dustPos=[];
+        for(let i=0;i<2000;i++){ const a=Math.random()*Math.PI*2; const r=0.9+Math.random()*0.2; dustPos.push(Math.cos(a)*r, (Math.random()-0.5)*0.2, Math.sin(a)*r); }
+        dustGeo.setAttribute('position', new THREE.Float32BufferAttribute(dustPos,3));
+        const doomsdayDust = new THREE.Points(dustGeo, new THREE.PointsMaterial({color:0xff3300, size:0.5, transparent:true, opacity:0.8, blending:THREE.AdditiveBlending}));
+        doomsdayDust.visible = false; scene.add(doomsdayDust);
+
+        // 8. STARS (Twinkling)
+        const starGeo=new THREE.BufferGeometry(); const sPos=new Float32Array(15000); const sSizes=new Float32Array(5000);
+        for(let i=0;i<5000;i++){ sPos[i*3]=(Math.random()-0.5)*8000; sPos[i*3+1]=(Math.random()-0.5)*8000; sPos[i*3+2]=(Math.random()-0.5)*8000; sSizes[i]=Math.random()*2; }
+        starGeo.setAttribute('position',new THREE.Float32BufferAttribute(sPos,3));
+        starGeo.setAttribute('size',new THREE.Float32BufferAttribute(sSizes,1));
+        const starMat = new THREE.PointsMaterial({color:0xffffff, size:2, transparent:true});
+        scene.add(new THREE.Points(starGeo, starMat));
+
+        // RINGS
+        const earthRing = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({color:0x336699, transparent:true, opacity:0.3})); earthRing.rotation.x=-Math.PI/2; scene.add(earthRing);
+        const cometRing = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({color:0x00ffff, transparent:true, opacity:0.2})); cometRing.rotation.x=-Math.PI/2; scene.add(cometRing);
+        const moonRing = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({color:0x666666, transparent:true, opacity:0.2})); moonRing.rotation.x=-Math.PI/2; earthGroup.add(moonRing);
+
+        // --- HUD ---
+        const hudLayer = document.getElementById('hud-layer');
+        function createMarker(name) { const d = document.createElement('div'); d.className='hud-marker'; d.innerHTML = `<span class="hud-label">${name}</span>`; hudLayer.appendChild(d); return d; }
+        const markers = { Earth: {el: createMarker('Earth'), obj: earthMesh}, Moon: {el: createMarker('Moon'), obj: moonMesh}, Comet: {el: createMarker('Comet'), obj: cHead}, Supernova: {el: createMarker('Supernova'), obj: snGroup} };
+        function updateHUD() {
+            for(let k in markers) {
+                const m = markers[k];
+                const visible = m.obj.visible && (k==='Supernova'?snGroup.visible: k==='Comet'?cometGroup.visible: k==='Earth'?earthGroup.visible: true);
+                if(!visible) { m.el.style.display='none'; continue; }
+                const vec = new THREE.Vector3(); m.obj.getWorldPosition(vec); vec.project(camera);
+                if(vec.z > 1 || Math.abs(vec.x)>1.1 || Math.abs(vec.y)>1.1) m.el.style.display='none';
+                else { m.el.style.display='flex'; m.el.style.transform = `translate(${(vec.x*.5+.5)*window.innerWidth}px, ${(-(vec.y*.5)+.5)*window.innerHeight}px) translate(-50%, -50%)`; }
+            }
         }
 
-        if(!dragging) return;
-        const angle = clientAngle(ev);
-        const delta = angle - startAngle; // radians
-        const deltaDeg = delta * 180 / Math.PI;
-        systemRotation = startRotation + deltaDeg;
-        updateTransforms();
-      }
+        // --- LOGIC ---
+        window.toggleObj = (name) => {
+            const btn = document.getElementById('btn'+name);
+            let t = (name==='Earth')?earthGroup:(name==='Moon')?moonMesh:(name==='Comet')?cometGroup:(name==='Storm')?stormGroup:snGroup;
+            t.visible = !t.visible; btn.classList.toggle('off', !t.visible);
+        };
 
-      function onPointerUp(ev){
-        dragging = false;
-        tilting = false;
-        if(ev.pointerId) svg.releasePointerCapture(ev.pointerId);
-      }
+        window.setMode = (mode) => {
+            currentMode = mode;
+            const s = SCALES[mode];
+            earthGroup.position.set(s.auUnits, 0, 0); earthMesh.scale.setScalar(s.earthSize);
+            moonMesh.position.set(s.moonDistUnits, 0, 0); moonMesh.scale.setScalar(s.moonSize);
+            sunMesh.scale.setScalar(s.sunSize); sunGlow.scale.set(s.sunSize*6, s.sunSize*6, 1);
+            snGroup.position.set(0, 50, -s.snDist);
 
-      // Support pointer events and touch/mouse fallbacks
-      svg.addEventListener('pointerdown', onPointerDown);
-      window.addEventListener('pointermove', onPointerMove);
-      window.addEventListener('pointerup', onPointerUp);
+            const rx = s.auUnits * s.cometMaxAU; const ry = s.auUnits * s.cometMinAU;
+            cometGroup.userData = { rx, ry };
+            
+            doomsdayDust.scale.setScalar(s.auUnits);
 
-      // For older touch devices fall back to touch events
-      svg.addEventListener('touchstart', (e)=> onPointerDown(e.touches[0]));
-      window.addEventListener('touchmove', (e)=> onPointerMove(e.touches[0]));
-      window.addEventListener('touchend', (e)=> onPointerUp({pointerId: null}));
+            earthRing.geometry.setFromPoints(new THREE.EllipseCurve(0,0, s.auUnits, s.auUnits, 0, 2*Math.PI).getPoints(128));
+            cometRing.geometry.setFromPoints(new THREE.EllipseCurve(0,0, rx, ry, 0, 2*Math.PI).getPoints(128));
+            moonRing.geometry.setFromPoints(new THREE.EllipseCurve(0,0, s.moonDistUnits, s.moonDistUnits, 0, 2*Math.PI).getPoints(64));
 
-      // Simple accessibility: clicking the Earth will rotate earth angle by +30 deg
-      earthPos.addEventListener('click', ()=>{ earthAngle = (earthAngle + 30) % 360; updateTransforms(); });
+            camera.far = s.camFar; camera.updateProjectionMatrix(); bloom.strength = s.glow;
+            document.getElementById('mode-cinematic').className = mode==='cinematic'?'mode-option active':'mode-option';
+            document.getElementById('mode-scientific').className = mode==='scientific'?'mode-option active':'mode-option';
+        };
 
-      // Allow clicking on outer rings to rotate their items by 30deg
-      document.getElementById('cometRing').addEventListener('click', ()=>{ cometAngle = (cometAngle + 30) % 360; cometRange.value = cometAngle; updateTransforms(); });
-      document.getElementById('supernovaRing').addEventListener('click', ()=>{ supernovaAngle = (supernovaAngle + 30) % 360; supernovaRange.value = supernovaAngle; updateTransforms(); });
+        function checkEvents(delta) {
+            document.querySelectorAll('.event-popup').forEach(p => p.style.display='none');
+            const earthAngle = parseFloat(document.getElementById('sliderEarthOrbit').value);
+            const s = SCALES[currentMode];
 
-      // Resize handler to keep range values consistent
-      window.addEventListener('resize', ()=> updateTransforms());
+            // 5. DOOMSDAY (Dec 31, All Off)
+            if(!moonMesh.visible && !cometGroup.visible && !snGroup.visible && !stormGroup.visible) {
+                if(earthAngle >= 358) {
+                    doomsdayTimer += delta;
+                    sunMat.color.setHex(0x5500aa); sunMat.emissive.setHex(0x5500aa); sunLight.color.setHex(0xaa00ff); sunGlow.material.color.setHex(0xaa00ff);
+                    doomsdayDust.visible = true; doomsdayDust.rotation.z += delta * 0.5;
+                    earthMesh.material.emissiveIntensity = Math.random() * 2.0;
+                    
+                    // Camera Shake
+                    const shake = 0.5; camera.position.x += (Math.random()-0.5)*shake; camera.position.y += (Math.random()-0.5)*shake;
+                    
+                    if(doomsdayTimer > 5.0) document.getElementById('popup-5').style.display = 'block';
+                    return; 
+                }
+            }
+            // Reset Doomsday
+            doomsdayTimer = 0; sunMat.color.setHex(0xffaa00); sunMat.emissive.setHex(0xff5500); sunLight.color.setHex(0xffffff); sunGlow.material.color.setHex(0xffaa00);
+            doomsdayDust.visible = false; earthMesh.material.emissiveIntensity = 0;
 
-      // Initial update
-      updateTransforms();
-    })();
-  </script>
+            const pE = new THREE.Vector3(); earthMesh.getWorldPosition(pE);
+            const pM = new THREE.Vector3(); moonMesh.getWorldPosition(pM);
+            const pS = new THREE.Vector3(0,0,0);
+
+            // 4. SOLAR ECLIPSE VIEW (May 10)
+            if(!cometGroup.visible && !snGroup.visible && !stormGroup.visible) {
+                if(Math.abs(earthAngle - 128) < 4) {
+                    const vES = new THREE.Vector3().subVectors(pS, pE).normalize();
+                    const vEM = new THREE.Vector3().subVectors(pM, pE).normalize();
+                    if(vES.angleTo(vEM) * (180/Math.PI) < 10) {
+                        const vCamEarth = new THREE.Vector3().subVectors(pE, camera.position).normalize();
+                        if(vCamEarth.angleTo(vES) * (180/Math.PI) < 15) {
+                             document.getElementById('popup-4').style.display = 'block'; return;
+                        }
+                    }
+                }
+            }
+
+            // 3. STORM ALIGNMENT (Aug 28)
+            if(!cometGroup.visible && !snGroup.visible && stormGroup.visible) {
+                if(Math.abs(earthAngle - 236) < 4) {
+                    const stormForward = new THREE.Vector3(1,0,0).applyQuaternion(stormGroup.getWorldQuaternion(new THREE.Quaternion())).normalize();
+                    const earthToSun = new THREE.Vector3().subVectors(pS, pE).normalize();
+                    const vES = new THREE.Vector3().subVectors(pS, pE).normalize();
+                    const vEM = new THREE.Vector3().subVectors(pM, pE).normalize();
+                    if(stormForward.angleTo(earthToSun)*(180/Math.PI) < 20 && vES.angleTo(vEM)*(180/Math.PI) > 80 && vES.angleTo(vEM)*(180/Math.PI) < 100) {
+                        document.getElementById('popup-3').style.display = 'block'; return;
+                    }
+                }
+            }
+
+            // 1. COMET CLOSE (Sept 14)
+            if(!snGroup.visible && !stormGroup.visible && cometGroup.visible) {
+                if(Math.abs(earthAngle - 253) < 4) {
+                    const pC = new THREE.Vector3(); cHead.getWorldPosition(pC);
+                    const vEM = new THREE.Vector3().subVectors(pM, pE).normalize();
+                    const vEC = new THREE.Vector3().subVectors(pC, pE).normalize();
+                    const dist = pM.distanceTo(pC) / s.auUnits;
+                    if(vEM.angleTo(vEC)*(180/Math.PI) < 45 && dist > 0.07 && dist < 0.09) {
+                        document.getElementById('popup-1').style.display = 'block'; return;
+                    }
+                }
+            }
+
+            // 2. SN ALIGNMENT (July)
+            if(!cometGroup.visible && !stormGroup.visible) {
+                if(earthAngle > 180 && earthAngle < 215) {
+                    const pSN = new THREE.Vector3(); snGroup.getWorldPosition(pSN);
+                    const vES = new THREE.Vector3().subVectors(pS, pE).normalize();
+                    const vESN = new THREE.Vector3().subVectors(pSN, pE).normalize();
+                    const vEM = new THREE.Vector3().subVectors(pM, pE).normalize();
+                    if(vES.angleTo(vESN)*(180/Math.PI) < 25 && vES.angleTo(vEM)*(180/Math.PI) > 160) {
+                        document.getElementById('popup-2').style.display = 'block';
+                    }
+                }
+            }
+        }
+
+        function updateSim(delta) {
+            const s = SCALES[currentMode];
+            const eDeg = document.getElementById('sliderEarthOrbit').value;
+            earthPivot.rotation.y = THREE.MathUtils.degToRad(eDeg);
+            
+            const date = new Date(2025, 0, 1); date.setDate(date.getDate() + Math.floor(eDeg/360 * 365));
+            document.getElementById('current-date').innerText = date.toLocaleDateString('en-US', {month:'long', day:'numeric'});
+
+            earthMesh.rotation.y = THREE.MathUtils.degToRad(document.getElementById('sliderEarthSpin').value);
+            cloudMesh.rotation.y += delta * 0.05; // Independent clouds
+
+            moonPivot.rotation.y = THREE.MathUtils.degToRad(document.getElementById('sliderMoon').value);
+            
+            const cRad = THREE.MathUtils.degToRad(document.getElementById('sliderComet').value);
+            const rx = cometGroup.userData.rx || s.auUnits, ry = cometGroup.userData.ry || s.auUnits;
+            cometGroup.position.set(Math.cos(cRad)*rx, 0, Math.sin(cRad)*ry);
+            cometGroup.lookAt(0,0,0); cometPivot.rotation.x = 0.1;
+
+            snPivot.rotation.y = THREE.MathUtils.degToRad(document.getElementById('sliderSupernova').value);
+            stormGroup.rotation.y = THREE.MathUtils.degToRad(document.getElementById('sliderStorm').value); 
+
+            const posAttr = solarWind.geometry.attributes.position;
+            for(let i=0; i<posAttr.count; i++){ let x=posAttr.getX(i)+0.2; if(x>15)x=-5; posAttr.setX(i,x); }
+            posAttr.needsUpdate = true;
+            aurN.rotation.z += delta; aurS.rotation.z -= delta;
+
+            const map={Sun:sunMesh, Earth:earthMesh, Moon:moonMesh, Comet:cHead, Supernova:snGroup};
+            const p1=new THREE.Vector3(); map[document.getElementById('objA').value].getWorldPosition(p1);
+            const p2=new THREE.Vector3(); map[document.getElementById('objB').value].getWorldPosition(p2);
+            document.getElementById('distance-result').innerText = (p1.distanceTo(p2)/s.auUnits).toFixed(5) + " AU";
+
+            checkEvents(delta);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+            updateSim(delta); updateHUD();
+            
+            const f = document.getElementById('sliderFocus').value/100;
+            const t = new THREE.Vector3(); earthGroup.getWorldPosition(t);
+            controls.target.lerp(t.multiplyScalar(f), 0.1);
+            
+            controls.update(); composer.render();
+        }
+
+        window.toggleUI=(v)=>{document.getElementById('ui-container').style.display=v?'block':'none'; document.getElementById('toggle-ui-btn').style.display=v?'none':'flex';};
+        window.resetSim=()=>{ 
+            document.querySelectorAll('input').forEach(i=>i.value=i.getAttribute('max')==='100'?'25':'90'); 
+            setMode('cinematic'); controls.reset(); document.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('off')); [earthGroup,moonMesh,cometGroup,stormGroup,snGroup].forEach(o=>o.visible=true); 
+        };
+        window.toggleObj = (name) => {
+            const btn = document.getElementById('btn'+name);
+            let t = (name==='Earth')?earthGroup:(name==='Moon')?moonMesh:(name==='Comet')?cometGroup:(name==='Storm')?stormGroup:snGroup;
+            t.visible = !t.visible; btn.classList.toggle('off', !t.visible);
+        };
+        window.onresize=()=>{ camera.aspect=window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth,window.innerHeight); composer.setSize(window.innerWidth,window.innerHeight); };
+
+        setMode('cinematic');
+        animate();
+    </script>
 </body>
 </html>
