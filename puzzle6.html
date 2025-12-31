@@ -3,10 +3,442 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Puzzle 6</title>
+    <title>The Prism Crypt - Secure Terminal</title>
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
+            color: #eee; 
+            font-family: 'Courier New', Courier, monospace; 
+        }
+        
+        #info { 
+            position: absolute; 
+            top: 20px; 
+            width: 100%; 
+            text-align: center; 
+            pointer-events: none; 
+            z-index: 10; 
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        /* --- SECURITY INPUT UI --- */
+        #security-panel {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            display: flex;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 25px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        input {
+            background: #111;
+            border: 1px solid #555;
+            color: #0f0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 16px;
+            padding: 8px 12px;
+            width: 250px;
+            text-transform: uppercase;
+            outline: none;
+            letter-spacing: 2px;
+        }
+        input:focus { border-color: #0f0; box-shadow: 0 0 8px rgba(0,255,0,0.2); }
+
+        button {
+            background: #222;
+            border: 1px solid #555;
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 8px 20px;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        button:hover { background: #0f0; color: #000; border-color: #0f0; }
+
+        /* --- HOME BUTTON --- */
+        #home-btn {
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            z-index: 200;
+            display: inline-block;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid #555;
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 8px 14px;
+            text-decoration: none;
+            text-transform: uppercase;
+            font-weight: bold;
+            border-radius: 4px;
+            transition: all 0.15s ease;
+        }
+        #home-btn:hover { background: #0f0; color: #000; border-color: #0f0; }
+
+        /* --- SUCCESS MODAL --- */
+        #modal-overlay {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #modal-content {
+            width: 500px;
+            background: #111;
+            border: 2px solid #0f0;
+            padding: 2px; /* Double border effect */
+            box-shadow: 0 0 50px rgba(0, 255, 0, 0.2);
+            animation: fadeIn 0.5s ease-out;
+            position: relative;
+        }
+
+        #modal-inner {
+            border: 1px solid #0f0;
+            padding: 30px;
+            text-align: center;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 255, 0, 0.05) 2px,
+                    rgba(0, 255, 0, 0.05) 4px
+                );
+        }
+
+        h2.top-secret {
+            color: #0f0;
+            border: 2px solid #0f0;
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 24px;
+            letter-spacing: 3px;
+            margin: 0 0 20px 0;
+            text-transform: uppercase;
+        }
+
+        p.message {
+            color: #eee;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .stamp {
+            color: #f00;
+            font-size: 14px;
+            border: 2px solid #f00;
+            display: inline-block;
+            padding: 5px 10px;
+            transform: rotate(-5deg);
+            opacity: 0.8;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+    </style>
 </head>
 <body>
-    <h1>Puzzle 6</h1>
-    <p>This puzzle page is empty. Go back to <a href="index.html">Puzzle List</a>.</p>
+    <div id="info">The Chromatic Artifact</div>
+    <a id="home-btn" href="index.html">Home</a>
+    <div id="security-panel">
+        <input type="text" id="passcode" placeholder="ENTER SEQUENCE CODE" autocomplete="off">
+        <button id="decrypt-btn">Decrypt</button>
+    </div>
+
+    <div id="modal-overlay">
+        <div id="modal-content">
+            <div id="modal-inner">
+                <h2 class="top-secret">TOP SECRET</h2>
+                <div style="font-size: 12px; color: #0f0; margin-bottom: 20px;">
+                    // AUTHENTICATION: VERIFIED<br>
+                    // CLEARANCE LEVEL: OMEGA
+                </div>
+                <p class="message">
+                    <strong>Object Nexus Security Safe: Unlocked</strong><br><br>
+                    Welcome, General Sarah. Your identity has been confirmed.
+                    Access to the vault has been granted.
+                </p>
+                <div class="stamp">CONFIDENTIAL</div>
+                <br><br>
+                <button onclick="document.getElementById('modal-overlay').style.display='none'" style="margin-top:10px;">CLOSE</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="container"></div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // --- SECURITY LOGIC ---
+        const CORRECT_CODE = "SARAHTHEGENERAL";
+        const inputField = document.getElementById('passcode');
+        const decryptBtn = document.getElementById('decrypt-btn');
+        const modal = document.getElementById('modal-overlay');
+
+        function checkCode() {
+            // Normalize input: remove spaces, convert to uppercase
+            const val = inputField.value.toUpperCase().replace(/\s+/g, '');
+            
+            if (val === CORRECT_CODE) {
+                // Success
+                modal.style.display = 'flex';
+                inputField.style.borderColor = '#0f0';
+                inputField.style.color = '#0f0';
+            } else {
+                // Fail
+                inputField.classList.add('shake');
+                inputField.style.borderColor = '#f00';
+                inputField.style.color = '#f00';
+                setTimeout(() => {
+                    inputField.classList.remove('shake');
+                    inputField.style.borderColor = '#555';
+                    inputField.style.color = '#0f0';
+                    inputField.value = '';
+                    inputField.placeholder = "ACCESS DENIED";
+                }, 500);
+            }
+        }
+
+        decryptBtn.addEventListener('click', checkCode);
+        inputField.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkCode();
+        });
+
+
+        // --- HARDCODED PUZZLE DATA ---
+        // 0:Red, 1:Green, 2:Blue, 3:Yellow, 4:Purple, 5:Orange, 6:White 
+        const VERTEX_PALETTE_INDICES = [0, 1, 2, 6, 4, 5, 6, 0, 1, 2, 3, 4];
+        
+        const PALETTE = [
+            { hex: 0xff3333, name: "Red" },    
+            { hex: 0x33ff33, name: "Green" },  
+            { hex: 0x3333ff, name: "Blue" },   
+            { hex: 0xffdd00, name: "Yellow" }, 
+            { hex: 0xaa00ff, name: "Purple" }, 
+            { hex: 0xff8800, name: "Orange" }, 
+            { hex: 0xffffff, name: "White" }   
+        ];
+
+        const LETTER_MAP = {
+            0: "H",  1: "E",  2: "L",  3: "S",  4: "T",
+            5: "A",  6: "G",  7: "R",  8: "A",  9: "E",
+            10: "N", 11: "H", 12: "E", 13: "R", 14: "A"
+        };
+        const DECOYS = "ZQXJK";
+
+        function generatePuzzleData() {
+            const t = (1 + Math.sqrt(5)) / 2;
+            const vertices = [
+                -1, t, 0,  1, t, 0,  -1,-t, 0,  1,-t, 0,
+                 0,-1, t,  0, 1, t,   0,-1,-t,  0, 1,-t,
+                 t, 0,-1,  t, 0, 1,  -t, 0,-1, -t, 0, 1
+            ];
+            const indices = [
+                0,11,5, 0,5,1, 0,1,7, 0,7,10, 0,10,11,
+                1,5,9, 5,11,4, 11,10,2, 10,7,6, 7,1,8,
+                3,9,4, 3,4,2, 3,2,6, 3,6,8, 3,8,9,
+                4,9,5, 2,4,11, 6,2,10, 8,6,7, 9,8,1
+            ];
+
+            const vertexColors = [];
+            for(let i=0; i<12; i++) {
+                vertexColors.push(PALETTE[VERTEX_PALETTE_INDICES[i]]);
+            }
+
+            const faceMappings = [];
+            for(let i=0; i<indices.length; i+=3) {
+                const faceIdx = i/3;
+                const a = indices[i];
+                const b = indices[i+1];
+                const c = indices[i+2];
+                let char = LETTER_MAP[faceIdx];
+                if (!char) char = DECOYS[faceIdx - 15];
+                faceMappings.push({
+                    indices: [a, b, c],
+                    colors: [vertexColors[a], vertexColors[b], vertexColors[c]],
+                    letter: char,
+                    id: faceIdx
+                });
+            }
+            return { vertices, indices, vertexColors, faceMappings };
+        }
+
+        // --- THREE.JS SETUP ---
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x111111, 0.05);
+
+        const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.z = 6;
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        document.getElementById('container').appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.6;
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+        scene.add(ambientLight);
+        const mainLight = new THREE.DirectionalLight(0xffffff, 1.5);
+        mainLight.position.set(5, 10, 7);
+        scene.add(mainLight);
+        const rimLight = new THREE.SpotLight(0x00ccff, 2);
+        rimLight.position.set(-5, 0, -5);
+        rimLight.lookAt(0,0,0);
+        scene.add(rimLight);
+        const bottomLight = new THREE.PointLight(0xffaa00, 1);
+        bottomLight.position.set(0, -5, 0);
+        scene.add(bottomLight);
+
+        // --- BUILD ARTIFACT ---
+        const puzzleData = generatePuzzleData();
+        const artifact = new THREE.Group();
+        scene.add(artifact);
+
+        const geometry = new THREE.BufferGeometry();
+        const posArray = new Float32Array(puzzleData.vertices);
+        geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        geometry.setIndex(puzzleData.indices);
+        geometry.computeVertexNormals();
+
+        const colorsBuffer = [];
+        for(let i=0; i<puzzleData.vertexColors.length; i++) {
+            const c = new THREE.Color(puzzleData.vertexColors[i].hex);
+            colorsBuffer.push(c.r, c.g, c.b);
+        }
+        geometry.setAttribute('color', new THREE.Float32BufferAttribute(colorsBuffer, 3));
+
+        const material = new THREE.MeshPhysicalMaterial({
+            vertexColors: true,
+            roughness: 0.2,
+            metalness: 0.1,
+            transmission: 0.1,
+            opacity: 0.95,
+            transparent: true,
+            side: THREE.DoubleSide,
+            flatShading: true
+        });
+        const mesh = new THREE.Mesh(geometry, material);
+        artifact.add(mesh);
+
+        const wireGeo = new THREE.WireframeGeometry(geometry);
+        const wireMat = new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 0.2, transparent: true });
+        const wire = new THREE.LineSegments(wireGeo, wireMat);
+        artifact.add(wire);
+
+        for(let i=0; i<puzzleData.vertices.length; i+=3) {
+            const x = puzzleData.vertices[i];
+            const y = puzzleData.vertices[i+1];
+            const z = puzzleData.vertices[i+2];
+            const vIndex = i/3;
+            
+            const dotGeo = new THREE.SphereGeometry(0.12, 16, 16);
+            const dotMat = new THREE.MeshStandardMaterial({ 
+                color: puzzleData.vertexColors[vIndex].hex,
+                emissive: puzzleData.vertexColors[vIndex].hex,
+                emissiveIntensity: 0.5,
+                roughness: 0.1
+            });
+            const dot = new THREE.Mesh(dotGeo, dotMat);
+            dot.position.set(x, y, z);
+            artifact.add(dot);
+        }
+
+        puzzleData.faceMappings.forEach(face => {
+            const vA = new THREE.Vector3(puzzleData.vertices[face.indices[0]*3], puzzleData.vertices[face.indices[0]*3+1], puzzleData.vertices[face.indices[0]*3+2]);
+            const vB = new THREE.Vector3(puzzleData.vertices[face.indices[1]*3], puzzleData.vertices[face.indices[1]*3+1], puzzleData.vertices[face.indices[1]*3+2]);
+            const vC = new THREE.Vector3(puzzleData.vertices[face.indices[2]*3], puzzleData.vertices[face.indices[2]*3+1], puzzleData.vertices[face.indices[2]*3+2]);
+
+            const center = new THREE.Vector3().addVectors(vA, vB).add(vC).divideScalar(3);
+            const tri = new THREE.Triangle(vA, vB, vC);
+            const normal = new THREE.Vector3();
+            tri.getNormal(normal);
+
+            const canvas = document.createElement('canvas');
+            canvas.width = 256; canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = "rgba(0,0,0,0)";
+            ctx.fillRect(0,0,256,256);
+            
+            ctx.shadowColor = "rgba(0,0,0,1)";
+            ctx.shadowBlur = 15;
+            ctx.font = "bold 140px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillStyle = "white";
+            ctx.fillText(face.letter, 128, 128);
+
+            const tex = new THREE.CanvasTexture(canvas);
+            const labelMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide, depthTest: false });
+            const labelGeo = new THREE.PlaneGeometry(0.8, 0.8);
+            const label = new THREE.Mesh(labelGeo, labelMat);
+            
+            label.position.copy(center).add(normal.multiplyScalar(0.02));
+            label.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1), normal);
+            artifact.add(label);
+        });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+
+    </script>
 </body>
 </html>
