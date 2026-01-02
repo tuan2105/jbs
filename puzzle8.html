@@ -3,10 +3,374 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Puzzle 8</title>
+    <title>University Chronoclasm Puzzle</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        h1 { margin-bottom: 10px; color: #333; }
+        
+        #game-wrapper {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+            height: 80vh;
+        }
+
+        /* Sidebar for Clues and Bank */
+        #sidebar {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-width: 300px;
+        }
+
+        #clue-box {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            max-height: 40%;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        #clue-box ul { padding-left: 20px; margin: 0; }
+        #clue-box li { margin-bottom: 5px; }
+
+        #piece-bank {
+            background: #e0e0e0;
+            padding: 15px;
+            border-radius: 8px;
+            flex-grow: 1;
+            border: 2px dashed #999;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 10px;
+            overflow-y: auto;
+        }
+
+        /* The Draggable Pieces */
+        .piece {
+            width: 100px;
+            height: 100px;
+            background-color: #4a90e2;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            cursor: grab;
+            user-select: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            padding: 5px;
+            box-sizing: border-box;
+            z-index: 10;
+            transition: transform 0.1s;
+        }
+
+        .piece:active { cursor: grabbing; transform: scale(1.05); }
+
+        /* Different colors for visual variety */
+        .piece[data-id="void"] { background-color: #333; }
+        .piece[data-id="courtyard"] { background-color: #27ae60; }
+        .piece[data-id="main"] { background-color: #e67e22; }
+
+        /* The Drop Zone (Canvas) */
+        #play-area {
+            flex: 2;
+            background-color: #ffffff;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+        }
+
+        /* Instructions overlay on canvas */
+        #canvas-instruction {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ccc;
+            font-size: 1.5rem;
+            pointer-events: none;
+            text-align: center;
+        }
+
+        /* Controls */
+        #controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            transition: background 0.2s;
+        }
+
+        #check-btn { background-color: #2ecc71; color: white; }
+        #check-btn:hover { background-color: #27ae60; }
+        
+        #reset-btn { background-color: #e74c3c; color: white; }
+        #reset-btn:hover { background-color: #c0392b; }
+
+        #status-msg {
+            margin-top: 10px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            min-height: 1.5rem;
+        }
+        .success { color: #2ecc71; }
+        .error { color: #e74c3c; }
+
+        /* Home button top-left */
+        #home-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: #3498db;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        #home-btn:hover { background-color: #1f78c1; }
+
+    </style>
 </head>
 <body>
-    <h1>Puzzle 8</h1>
-    <p>This puzzle page is empty. Go back to <a href="index.html">Puzzle List</a>.</p>
+
+    <a id="home-btn" href="index.html" title="Go Home">Home</a>
+
+    <h1>University Layout </h1>
+
+    <div id="game-wrapper">
+        <div id="sidebar">
+            <div id="clue-box">
+                <strong>Clues:</strong>
+                <ul>
+                    <li>The Dean's Office is directly west of the Astronomy Lab.</li>
+                    <li>The Astronomy Lab is directly north of exactly one other location.</li>
+                    <li>The Biochemistry Lab is in a corner and is directly east of the Astronomy Lab.</li>
+                    <li>The Student Lounge is directly west of exactly one other location.</li>
+                    <li>The Server Room is directly south of the Student Lounge.</li>
+                    <li>The Archive Wing is directly adjacent to exactly three other locations.</li>
+                    <li>The Courtyard is directly south of exactly one other location.</li>
+                    <li>The Empty Void is in a corner and is adjacent to both the Courtyard and the Archive Wing.</li>
+                    <li>The Main Hall is directly adjacent to exactly four other locations.</li>
+                    <li>The Dean's Office and Server Room share the same column, with exactly one location between them.</li>
+                </ul>
+            </div>
+            
+            <strong>Pieces (Drag from here):</strong>
+            <div id="piece-bank" ondrop="dropToBank(event)" ondragover="allowDrop(event)">
+                <div class="piece" draggable="true" ondragstart="drag(event)" id="p1" data-id="dean">Dean's Office</div>
+                <div class="piece" draggable="true" ondragstart="drag(event)" id="p2" data-id="astro">Astronomy Lab</div>
+                <div class="piece" draggable="true" ondragstart="drag(event)" id="p3" data-id="bio">Biochem Lab</div>
+                <div class="piece" draggable="true" ondragstart="drag(event)" id="p4" data-id="lounge">Student Lounge</div>
+                <div class="piece" draggable="true" ondragstart="drag(event)" id="p5" data-id="server">Server Room</div>
+                <div class="piece" draggable="true" ondragstart="drag(event)" id="p6" data-id="archive">Archive Wing</div>
+                <div class="piece" draggable="true" ondragstart="drag(event)" id="p7" data-id="court">Courtyard</div>
+                <div class="piece" draggable="true" ondragstart="drag(event)" id="p8" data-id="void">Empty Void</div>
+                <div class="piece" draggable="true" ondragstart="drag(event)" id="p9" data-id="main">Main Hall</div>
+            </div>
+        </div>
+
+        <div id="play-area" ondrop="dropToCanvas(event)" ondragover="allowDrop(event)">
+            <div id="canvas-instruction">Drag pieces here.<br>Determine the shape yourself.</div>
+        </div>
+    </div>
+
+    <div id="controls">
+        <button id="check-btn" onclick="checkSolution()">Check Solution</button>
+        <button id="reset-btn" onclick="resetGame()">Reset Board</button>
+    </div>
+    <div id="status-msg"></div>
+
+    <script>
+        const GRID_SIZE = 105; // 100px width + 5px gap margin
+
+        // The correct relative grid positions (x, y)
+        // 0,0 is top-left of the solution shape
+        const SOLUTION = {
+            "dean":    {x: 0, y: 0},
+            "astro":   {x: 1, y: 0},
+            "bio":     {x: 2, y: 0},
+            "lounge":  {x: 0, y: 1},
+            "main":    {x: 1, y: 1},
+            "archive": {x: 2, y: 1},
+            "server":  {x: 0, y: 2},
+            "court":   {x: 1, y: 2},
+            "void":    {x: 2, y: 2}
+        };
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.id);
+            // Calculate offset so we drop exactly where we grabbed or centered
+            const rect = ev.target.getBoundingClientRect();
+            ev.dataTransfer.setData("offsetX", ev.clientX - rect.left);
+            ev.dataTransfer.setData("offsetY", ev.clientY - rect.top);
+        }
+
+        function dropToCanvas(ev) {
+            ev.preventDefault();
+            const data = ev.dataTransfer.getData("text");
+            const piece = document.getElementById(data);
+            
+            // Only move if it's a valid piece
+            if (!piece) return;
+
+            const playArea = document.getElementById("play-area");
+            
+            // Logic to calculate position relative to the play area
+            const playAreaRect = playArea.getBoundingClientRect();
+            
+            // Raw drop position
+            let dropX = ev.clientX - playAreaRect.left - (GRID_SIZE/2);
+            let dropY = ev.clientY - playAreaRect.top - (GRID_SIZE/2);
+
+            // Snap to Grid Logic (Snaps to nearest 105px block)
+            // We add a small buffer so it doesn't snap to negative
+            let snappedX = Math.round(dropX / GRID_SIZE) * GRID_SIZE;
+            let snappedY = Math.round(dropY / GRID_SIZE) * GRID_SIZE;
+
+            // Boundary checks
+            if (snappedX < 0) snappedX = 0;
+            if (snappedY < 0) snappedY = 0;
+            // Prevent dropping too far right/down (simple check)
+            if (snappedX > playAreaRect.width - 100) snappedX = snappedX - GRID_SIZE;
+            if (snappedY > playAreaRect.height - 100) snappedY = snappedY - GRID_SIZE;
+
+            // Apply styles for absolute positioning inside canvas
+            piece.style.position = "absolute";
+            piece.style.left = snappedX + "px";
+            piece.style.top = snappedY + "px";
+            piece.style.margin = "0"; // Remove flex gap margins
+
+            playArea.appendChild(piece);
+            document.getElementById("canvas-instruction").style.display = "none";
+        }
+
+        function dropToBank(ev) {
+            ev.preventDefault();
+            const data = ev.dataTransfer.getData("text");
+            const piece = document.getElementById(data);
+            if (!piece) return;
+
+            const bank = document.getElementById("piece-bank");
+            
+            // Reset styles to flow normally in the bank
+            piece.style.position = "static";
+            piece.style.left = "auto";
+            piece.style.top = "auto";
+            piece.style.transform = "none";
+            
+            bank.appendChild(piece);
+
+            // Show instruction if canvas is empty
+            if (document.getElementById("play-area").children.length <= 1) { // 1 because of the text overlay
+                document.getElementById("canvas-instruction").style.display = "block";
+            }
+        }
+
+        function checkSolution() {
+            const status = document.getElementById("status-msg");
+            const playArea = document.getElementById("play-area");
+            const pieces = playArea.querySelectorAll(".piece");
+
+            if (pieces.length !== 9) {
+                status.textContent = "Please place all 9 pieces on the board.";
+                status.className = "error";
+                return;
+            }
+
+            // 1. Map current positions
+            let placedMap = [];
+            let minX = Infinity;
+            let minY = Infinity;
+
+            pieces.forEach(p => {
+                const x = parseInt(p.style.left);
+                const y = parseInt(p.style.top);
+                if (x < minX) minX = x;
+                if (y < minY) minY = y;
+                
+                placedMap.push({
+                    id: p.getAttribute("data-id"),
+                    rawX: x,
+                    rawY: y
+                });
+            });
+
+            // 2. Normalize positions (0,0 based on top-left-most piece)
+            // We convert pixels back to grid indices (0, 1, 2)
+            let isCorrect = true;
+
+            for (let p of placedMap) {
+                // Calculate grid index relative to the top-left most piece
+                // Math.round handles any slight pixel variations
+                let gridX = Math.round((p.rawX - minX) / GRID_SIZE);
+                let gridY = Math.round((p.rawY - minY) / GRID_SIZE);
+
+                const correctPos = SOLUTION[p.id];
+
+                if (gridX !== correctPos.x || gridY !== correctPos.y) {
+                    isCorrect = false;
+                    break;
+                }
+            }
+
+            if (isCorrect) {
+                status.textContent = "Correct! You can now explore the University.";
+                status.className = "success";
+            } else {
+                status.textContent = "Incorrect. Check the clues and try again.";
+                status.className = "error";
+            }
+        }
+
+        function resetGame() {
+            const bank = document.getElementById("piece-bank");
+            const pieces = document.querySelectorAll(".piece");
+            
+            pieces.forEach(p => {
+                p.style.position = "static";
+                bank.appendChild(p);
+            });
+            
+            document.getElementById("canvas-instruction").style.display = "block";
+            document.getElementById("status-msg").textContent = "";
+        }
+    </script>
 </body>
 </html>
