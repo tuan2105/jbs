@@ -1,12 +1,217 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Puzzle 9</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Terminal — Puzzle 9</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --bg:#02030a;
+            --neon-a:#00fff0;
+            --neon-b:#7bf200;
+            --accent:#6cc1ff;
+        }
+        html,body{height:100%;margin:0;font-family:'Share Tech Mono', monospace;background:radial-gradient(ellipse at center, #061018 0%, #02030a 45%, #000 100%);color:var(--neon-a);overflow:hidden}
+
+        /* subtle scanlines & noise */
+        body::before{
+            content:"";position:fixed;inset:0;pointer-events:none;background-image:repeating-linear-gradient(rgba(255,255,255,0.02) 0 1px, transparent 1px 3px);mix-blend-mode:overlay;
+        }
+
+        /* Top bar */
+        .top-bar{position:fixed;left:0;right:0;top:0;height:48px;display:flex;align-items:center;gap:12px;padding:0 18px;background:linear-gradient(90deg, rgba(255,255,255,0.02), transparent);border-bottom:1px solid rgba(0,255,240,0.04);z-index:50}
+        .top-title{font-family:'Orbitron',sans-serif;font-weight:700;color:var(--accent);letter-spacing:2px}
+        .home-link{color:var(--neon-a);text-decoration:none;border:1px solid rgba(255,255,255,0.03);padding:6px 10px;border-radius:6px;background:rgba(255,255,255,0.01)}
+
+        /* Center terminal */
+        .terminal-wrap{position:absolute;inset:60px 60px 40px 60px;display:flex;align-items:center;justify-content:center}
+        .terminal{width:min(960px,92%);height:min(540px,76%);background:linear-gradient(180deg,rgba(10,20,30,0.6), rgba(0,0,0,0.8));border:1px solid rgba(0,255,240,0.06);box-shadow:0 8px 40px rgba(0,0,0,0.6);border-radius:8px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+
+        .terminal-inner{width:90%;height:80%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+
+        .glow-title{font-family:'Orbitron',sans-serif;color:var(--neon-a);font-size:1.6rem;letter-spacing:4px;text-shadow:0 0 12px rgba(0,255,240,0.12), 0 0 30px rgba(108,193,255,0.06)}
+        .sub{color:rgba(180,255,240,0.7);font-size:0.9rem}
+
+        .password-box{margin-top:8px;display:flex;gap:8px;align-items:center}
+        .password-input{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:12px 14px;color:var(--neon-a);outline:none;border-radius:6px;width:260px;font-size:1rem;box-shadow:0 6px 30px rgba(0,0,0,0.6) inset}
+        .password-input:focus{box-shadow:0 0 18px rgba(0,255,240,0.12);border-color:rgba(0,255,240,0.14)}
+        .submit-btn{background:linear-gradient(180deg,var(--neon-a),var(--accent));color:#001;border:none;padding:12px 14px;border-radius:6px;font-weight:700;cursor:pointer}
+
+        /* Floating hint */
+        .hint{position:absolute;bottom:12px;left:18px;color:rgba(180,255,240,0.5);font-size:0.9rem}
+
+        /* Cards layer */
+        .cards-field{position:absolute;inset:0;pointer-events:none;z-index:5}
+        .card{position:absolute;width:96px;height:136px;border-radius:6px;background:#fff;color:#000;display:flex;flex-direction:column;justify-content:space-between;padding:10px 10px;font-weight:700;box-shadow:0 10px 30px rgba(0,0,0,0.6);transform-origin:center center;opacity:0.95}
+        .card .top,.card .bottom{text-shadow:0 1px 0 rgba(255,255,255,0.6)}
+        .card .suit{font-size:1.6rem;text-align:center}
+
+        /* dark variant for suit hearts/diamonds */
+        .red{color:#b62d3b}
+
+        /* subtle blur/glow for dystopian feel */
+        .vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center, rgba(0,255,240,0.02) 0%, transparent 20%)}
+
+        /* Modal popup */
+        .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(rgba(0,0,0,0.6),rgba(0,0,0,0.6));z-index:200;backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .24s ease}
+        .modal.open{opacity:1;pointer-events:auto}
+        .modal-box{background:linear-gradient(180deg,#051017,#021018);border:1px solid rgba(0,255,240,0.08);padding:24px 28px;border-radius:10px;min-width:320px;text-align:center;box-shadow:0 12px 48px rgba(0,0,0,0.6)}
+        .modal-box h2{color:var(--neon-b);margin:0 0 8px;font-size:1.4rem}
+        .modal-box p{color:var(--neon-a);margin:0 0 14px}
+        .modal-btn{background:var(--neon-a);border:none;padding:10px 14px;border-radius:6px;cursor:pointer;font-weight:700}
+
+        /* small responsive */
+        @media (max-width:600px){.password-input{width:160px}.card{width:74px;height:104px}}
+    </style>
 </head>
 <body>
-    <h1>Puzzle 9</h1>
-    <p>This puzzle page is empty. Go back to <a href="index.html">Puzzle List</a>.</p>
+    <div class="top-bar">
+        <div class="top-title">SYN-TERMINAL.09</div>
+        <a class="home-link" href="index.html">HOME</a>
+    </div>
+
+    <div class="terminal-wrap">
+        <div class="terminal" role="main">
+            <div class="terminal-inner">
+                <div class="glow-title">ACCESS TERMINAL</div>
+                <div class="sub">AUTHENTICATION REQUIRED — ENTER PASSWORD</div>
+
+                <div class="password-box" aria-live="polite">
+                    <input id="pwd" class="password-input" placeholder="ENTER PASSWORD" aria-label="Password" />
+                    <button id="submit" class="submit-btn">ENTER</button>
+                </div>
+
+                <div class="sub hint">Hint: play some tá lả.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cards-field" id="cards"></div>
+    <div class="vignette"></div>
+
+    <div class="modal" id="modal" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="modal-box">
+            <h2 id="modal-title"></h2>
+            <p id="modal-msg"></p>
+            <button class="modal-btn" id="modal-ok">OK</button>
+        </div>
+    </div>
+
+    <script>
+        // Card generation
+        const suits = ['♠','♣','♥','♦'];
+        const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+        const cardsLayer = document.getElementById('cards');
+
+        function spawnCard(){
+            const card = document.createElement('div');
+            card.className = 'card';
+            const suit = suits[Math.floor(Math.random()*suits.length)];
+            const rank = ranks[Math.floor(Math.random()*ranks.length)];
+            const red = (suit === '♥' || suit === '♦');
+            if(red) card.classList.add('red');
+
+            card.innerHTML = `<div class="top">${rank}<span class="suit">${suit}</span></div><div class="suit" style="font-size:34px;line-height:1">${suit}</div><div class="bottom">${rank}</div>`;
+
+            // start from random edge
+            const side = Math.random();
+            const vw = window.innerWidth, vh = window.innerHeight;
+            let startX, startY, endX, endY;
+
+            // Choose starting edge and an ending edge for movement
+            const startEdge = Math.floor(Math.random()*4); // 0:top,1:right,2:bottom,3:left
+            const endEdge = (startEdge + 2 + Math.floor(Math.random()*3)-1 + 4) % 4; // aim generally across
+
+            function randBetween(a,b){ return a + Math.random()*(b-a); }
+
+            switch(startEdge){
+                case 0: startX = randBetween(-0.1*vw,1.1*vw); startY = -160; break;
+                case 1: startX = vw+160; startY = randBetween(-0.1*vh,1.1*vh); break;
+                case 2: startX = randBetween(-0.1*vw,1.1*vw); startY = vh+160; break;
+                case 3: startX = -160; startY = randBetween(-0.1*vh,1.1*vh); break;
+            }
+            switch(endEdge){
+                case 0: endX = randBetween(-0.1*vw,1.1*vw); endY = -160; break;
+                case 1: endX = vw+160; endY = randBetween(-0.1*vh,1.1*vh); break;
+                case 2: endX = randBetween(-0.1*vw,1.1*vw); endY = vh+160; break;
+                case 3: endX = -160; endY = randBetween(-0.1*vh,1.1*vh); break;
+            }
+
+            // initial placement
+            card.style.left = startX + 'px';
+            card.style.top = startY + 'px';
+            const dur = randBetween(3500,8200);
+            const rot = randBetween(-720,720);
+            card.style.transition = `transform ${dur}ms linear, left ${dur}ms linear, top ${dur}ms linear, opacity ${dur/3}ms ease`;
+            cardsLayer.appendChild(card);
+
+            // force reflow then animate
+            requestAnimationFrame(()=>{
+                card.style.left = endX + 'px';
+                card.style.top = endY + 'px';
+                card.style.transform = `rotate(${rot}deg) scale(${randBetween(0.9,1.1)})`;
+                card.style.opacity = 0.18;
+            });
+
+            // remove after animation
+            setTimeout(()=>{ card.remove(); }, dur+400);
+        }
+
+        // spawn frequently but not too heavy
+        let spawnInterval = setInterval(spawnCard, 600);
+
+        // Password logic
+        const password = 'ganymede'; // accepted case-insensitive
+        const input = document.getElementById('pwd');
+        const submit = document.getElementById('submit');
+        const modal = document.getElementById('modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMsg = document.getElementById('modal-msg');
+        const modalOk = document.getElementById('modal-ok');
+
+        function showModal(title, msg){
+            modalTitle.textContent = title;
+            modalMsg.textContent = msg;
+            modal.classList.add('open');
+            modal.setAttribute('aria-hidden','false');
+        }
+        function hideModal(){
+            modal.classList.remove('open');
+            modal.setAttribute('aria-hidden','true');
+        }
+
+        function checkPwd(){
+            const val = (input.value||'').trim();
+            if(val.toLowerCase() === password){
+                showModal('welcome back, Kevin', 'Access granted. Welcome back, Kevin.');
+                // subtle success — stop spawning and add a brighter glow
+                clearInterval(spawnInterval);
+                document.querySelector('.terminal').style.boxShadow = '0 12px 80px rgba(108,193,255,0.14)';
+                document.body.style.transition = 'background 1s';
+                document.body.style.background = 'radial-gradient(ellipse at center, rgba(7,15,22,0.9) 0%, #000 70%)';
+            } else {
+                showModal('ACCESS DENIED', 'Incorrect password.');
+                // quick blink
+                const t = document.querySelector('.password-input');
+                t.animate([{boxShadow:'0 0 18px rgba(255,0,0,0.12)'},{boxShadow:'none'}],{duration:400,iterations:2});
+            }
+        }
+
+        submit.addEventListener('click',checkPwd);
+        input.addEventListener('keydown',e=>{ if(e.key==='Enter') checkPwd(); });
+
+        modalOk.addEventListener('click',hideModal);
+
+        // small accessibility: focus input on load
+        window.addEventListener('load', ()=>{ input.focus(); });
+
+        // spawn light bursts on mouse move for interactivity
+        let lastMove = 0;
+        window.addEventListener('mousemove', (e)=>{
+            const now = Date.now();
+            if(now - lastMove > 160){ spawnCard(); lastMove = now; }
+        });
+    </script>
 </body>
 </html>
