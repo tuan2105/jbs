@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexus Layout</title>
+<style>
+    /* GENERAL STYLING - THEME: 1995 TERMINAL */
+    :root {
+        --bg-color: #0d1117;
+        --grid-line: #1f2937;
+        --neon-blue: #58a6ff;
+        --neon-red: #ff7b72;
+        --neon-amber: #d29922;
+        --neon-purple: #bc8cff;
+        --text-color: #c9d1d9;
+        --glass: rgba(13, 17, 23, 0.95);
+    }
+
+    body {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        font-family: 'Courier New', Courier, monospace;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+    }
+
+    /* HEADER BAR */
+    .top-bar {
+        width: 100%;
+        background-color: #161b22;
+        border-bottom: 1px solid var(--grid-line);
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-sizing: border-box;
+        margin-bottom: 20px;
+    }
+
+    .page-title {
+        color: var(--neon-blue);
+        font-size: 1.5em;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        text-shadow: 0 0 10px rgba(88, 166, 255, 0.3);
+    }
+
+    .home-btn {
+        background: transparent;
+        border: 1px solid var(--text-color);
+        color: var(--text-color);
+        padding: 8px 15px;
+        text-decoration: none;
+        font-weight: bold;
+        transition: 0.2s;
+        font-size: 0.9em;
+    }
+
+    .home-btn:hover {
+        background: var(--text-color);
+        color: var(--bg-color);
+    }
+
+    /* THE MAP CONTAINER */
+    .nexus-map {
+        display: grid;
+        grid-template-areas:
+            "office office office"
+            "west   center  east"
+            "security security security";
+        gap: 15px;
+        width: 90%;
+        max-width: 800px;
+        padding: 20px;
+        border: 2px solid var(--grid-line);
+        background-image: 
+            linear-gradient(var(--grid-line) 1px, transparent 1px),
+            linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+        background-size: 20px 20px;
+        position: relative;
+    }
+
+    /* ZONES */
+    .zone {
+        border: 1px solid var(--neon-blue);
+        padding: 15px;
+        position: relative;
+        min-height: 150px;
+        background: rgba(88, 166, 255, 0.05);
+    }
+
+    .zone-title {
+        position: absolute;
+        top: -10px;
+        left: 10px;
+        background: var(--bg-color);
+        padding: 0 5px;
+        color: var(--neon-blue);
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 0.9em;
+    }
+
+    /* ROOM ASSIGNMENTS */
+    .office { grid-area: office; border-color: var(--neon-amber); }
+    .center { grid-area: center; border-color: var(--neon-red); }
+    .security { grid-area: security; }
+    .west { grid-area: west; }
+    .east { grid-area: east; }
+
+    /* OBJECT BUTTONS */
+    .interact-btn {
+        display: block;
+        margin: 5px 0;
+        padding: 10px;
+        width: 100%;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px dashed var(--text-color);
+        color: var(--text-color);
+        cursor: pointer;
+        text-align: left;
+        font-family: inherit;
+        font-size: 0.9em;
+        transition: all 0.2s;
+    }
+
+    .interact-btn:hover {
+        background: var(--neon-blue);
+        color: var(--bg-color);
+        border-style: solid;
+    }
+
+    /* SPECIAL PUZZLE/ANOMALY BUTTONS */
+    .puzzle-trigger {
+        border: 1px solid var(--neon-amber);
+        color: var(--neon-amber);
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+    .puzzle-trigger:hover {
+        background: var(--neon-amber);
+        color: var(--bg-color);
+    }
+
+    .core-trigger {
+        border: 1px solid var(--neon-red);
+        color: var(--neon-red);
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+    .core-trigger:hover {
+        background: var(--neon-red);
+        color: var(--bg-color);
+    }
+
+    .anomaly-btn {
+        border: 1px solid var(--neon-purple);
+        color: var(--neon-purple);
+        font-weight: bold;
+        margin-bottom: 15px;
+        background: rgba(188, 140, 255, 0.1);
+        animation: pulse 2s infinite;
+    }
+    .anomaly-btn:hover {
+        background: var(--neon-purple);
+        color: var(--bg-color);
+    }
+
+    @keyframes pulse {
+        0% { box-shadow: 0 0 5px rgba(188, 140, 255, 0.2); }
+        50% { box-shadow: 0 0 15px rgba(188, 140, 255, 0.6); }
+        100% { box-shadow: 0 0 5px rgba(188, 140, 255, 0.2); }
+    }
+
+    /* MODAL POPUP */
+    .modal-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.85);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 100;
+        backdrop-filter: blur(2px);
+    }
+
+    .data-log {
+        background: var(--bg-color);
+        border: 2px solid var(--neon-blue);
+        padding: 25px;
+        width: 85%;
+        max-width: 550px;
+        box-shadow: 0 0 30px rgba(88, 166, 255, 0.15);
+    }
+
+    .log-header {
+        border-bottom: 1px solid var(--grid-line);
+        padding-bottom: 15px;
+        margin-bottom: 15px;
+        color: var(--neon-blue);
+        font-weight: bold;
+        font-size: 1.1em;
+        letter-spacing: 1px;
+    }
+
+    .log-content {
+        line-height: 1.6;
+        margin-bottom: 25px;
+        font-size: 1em;
+    }
+
+    .close-btn {
+        background: var(--neon-blue);
+        border: none;
+        color: var(--bg-color);
+        padding: 10px 25px;
+        font-weight: bold;
+        cursor: pointer;
+        float: right;
+        font-family: inherit;
+        text-transform: uppercase;
+    }
+    .close-btn:hover {
+        opacity: 0.9;
+    }
+
+    /* Responsive for Mobile */
+    @media (max-width: 600px) {
+        .nexus-map {
+            grid-template-areas:
+                "office"
+                "center"
+                "west"
+                "east"
+                "security";
+        }
+    }
+
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="page-title">NEXUS LAYOUT</div>
+    <a href="index.html" class="home-btn">🏠 HOME</a>
+</div>
+
+<div class="nexus-map">
+
+    <div class="zone office">
+        <span class="zone-title" style="color: var(--neon-amber)">Phòng Của Magnus</span>
+        
+        <button class="interact-btn anomaly-btn" onclick="showData('chimera_anomaly')">
+            ⚠️ ANOMALY: TÍN HIỆU CỦA AI
+        </button>
+
+        <button class="interact-btn puzzle-trigger" onclick="showPuzzle('magnus')">
+            🔐 TRUY CẬP HỆ THỐNG: MẬT MÃ CHIMERA & TIẾN HÓA
+        </button>
+
+        <button class="interact-btn" onclick="showData('cradle')">🔍 Con lắc Newton</button>
+        <button class="interact-btn" onclick="showData('mug')">🔍 Chiếc cốc bẩn</button>
+        <button class="interact-btn" onclick="showData('flask')">🔍 Bình rượu bạc (Dưới gầm bàn)</button>
+        <button class="interact-btn" onclick="showData('diploma')">🔍 Bằng Đại Học (Trên tường)</button>
+    </div>
+
+    <div class="zone west">
+        <span class="zone-title">Khu Vệ Sinh</span>
+        <button class="interact-btn" onclick="showData('mirror')">🔍 Tấm gương nứt</button>
+        <button class="interact-btn" onclick="showData('vent')">🔍 Lưới tản nhiệt (Góc sàn)</button>
+    </div>
+
+    <div class="zone center">
+        <span class="zone-title" style="color: var(--neon-red)">Buồng Ổn Định Lõi</span>
+        
+        <button class="interact-btn core-trigger" onclick="showPuzzle('core')">
+            ⚙️ KÍCH HOẠT: HIỆU CHỈNH THỜI GIAN (CHRONO)
+        </button>
+
+        <button class="interact-btn" onclick="showData('console')">🔍 Bảng điều khiển Trung tâm</button>
+        <button class="interact-btn" onclick="showData('paper')">🔍 Quả bóng giấy nhàu nát</button>
+    </div>
+
+    <div class="zone east">
+        <span class="zone-title">Lưu Trữ</span>
+        <div style="color: gray; font-size: 0.8em; padding: 10px; text-align: center;">
+            [DỮ LIỆU BỊ HỎNG]<br>
+            <span style="font-size:2em; display:block; margin: 10px;">🚫</span>
+            Khu vực này hiện không thể truy cập.
+        </div>
+    </div>
+
+    <div class="zone security">
+        <span class="zone-title">Kiểm Soát An Ninh</span>
+        <button class="interact-btn" onclick="showData('phone')">🔍 Điện thoại trong hộp kính</button>
+    </div>
+
+</div>
+
+<div id="modal" class="modal-overlay">
+    <div class="data-log">
+        <div class="log-header" id="log-title">DATA LOG [READ-ONLY]</div>
+        <div class="log-content" id="log-text"></div>
+        <button class="close-btn" onclick="closeModal()">ĐÓNG KẾT NỐI</button>
+    </div>
+</div>
+
+<script>
+    // DATABASE OF TEXTS
+    const db = {
+        'chimera_anomaly': "<strong>PHÁT HIỆN BẤT THƯỜNG KHÔNG GIAN</strong><br><br>AI của Nexus yêu cầu mọi người tìm một “Chimera Lock”, một vali khóa có hình ảnh Chimera bên ngoài, được cất trong phòng của Magnus. Bên trong có một USB chứa code để giúp AI truy cập và khôi phục các tệp ghi tạm thời.<br><br>Mục tiêu giống như tìm hộp đen của máy bay rơi, giúp tái tạo lại phân cảnh trước và trong thảm họa gây ra vụ nổ trước đó.<br><br>Tuy nhiên khi mọi người đến khu vực chỉ định, <strong>không có gì ở đó cả</strong>, chỉ có những tiếng chập mạch vô hình vọng lại từ các bức tường.<br><br><strong>[VISION TRIGGER: NULL]</strong>",
+
+        'console': "Vật thể: Bảng điều khiển Trung tâm (Bàn phím/màn hình mọi người tập trung xung quanh). Một vài phím bấm vẫn lách tách tia lửa điện. <br><br><strong>[VISION TRIGGER: 101]</strong>",
+        
+        'cradle': "Vật thể: Con lắc Newton (Newton’s Cradle - món đồ chơi có các viên bi bạc va vào nhau) trên bàn làm việc trong văn phòng của Magnus. Các viên bi di chuyển với một nhịp điệu kỳ lạ, dường như không bao giờ dừng lại. <br><br><strong>[VISION TRIGGER: 360]</strong>",
+        
+        'phone': "Vật thể: Một chiếc Điện thoại bám bụi không có số bấm đặt trong hộp kính tại buồng kiểm tra an ninh. Nó không có dây nối ra ngoài, có vẻ chỉ nối với một địa chỉ nội bộ duy nhất. <br><br><strong>[VISION TRIGGER: 911]</strong>",
+        
+        'mug': "Vật thể: Chiếc cốc 'Người cha Số 1' (Number 1 Dad) bỏ lại trong bồn rửa, bám đầy vết cà phê cũ đã khô cứng. Dường như nó đã ở đây từ trước vụ nổ năm 1995. <br><br><strong>[VISION TRIGGER: 747]</strong>",
+        
+        'vent': "Vật thể: Một tấm lưới tản nhiệt lỏng lẻo gần sàn nhà. Có tiếng gió rít nhẹ phát ra từ bên trong, nghe như tiếng thì thầm. <br><br><strong>[VISION TRIGGER: 000]</strong>",
+        
+        'flask': "Vật thể: Một chiếc bình rượu màu bạc được dán băng keo dưới bàn làm việc của Magnus. Nó rỗng không, nhưng vẫn còn mùi rượu whisky rẻ tiền. <br><br><strong>[VISION TRIGGER: 021]</strong>",
+        
+        'paper': "Vật thể: Một quả bóng giấy bị vò nát nằm gần chân Máy du hành Thời gian. Nó chứa các phương trình bị gạch bỏ một cách giận dữ. <br><br><strong>[VISION TRIGGER: 404]</strong>",
+        
+        'mirror': "Vật thể: Một chiếc gương nứt phía trên bồn rửa trong phòng vệ sinh. Khi nhìn vào, hình ảnh phản chiếu của bạn có vẻ bị trễ 0.5 giây so với thực tế. <br><br><strong>[VISION TRIGGER: 666]</strong>",
+        
+        'diploma': "Vật thể: Một tấm Bằng Đại học được đóng khung trên tường, trao tặng cho Magnus Vance. Kính khung đã vỡ nát, nhưng tên của ông vẫn còn nguyên vẹn. <br><br><strong>[VISION TRIGGER: 199]</strong>"
+    };
+
+    function showData(id) {
+        const modal = document.getElementById('modal');
+        const text = document.getElementById('log-text');
+        const title = document.getElementById('log-title');
+
+        if(id === 'chimera_anomaly') {
+            title.innerText = "⚠️ CẢNH BÁO BẤT THƯỜNG";
+            title.style.color = "#bc8cff"; // Purple for anomaly
+        } else {
+            title.innerText = "TRÍCH XUẤT BỘ NHỚ...";
+            title.style.color = "#58a6ff";
+        }
+        
+        text.innerHTML = db[id];
+        modal.style.display = 'flex';
+    }
+
+    function showPuzzle(type) {
+        const modal = document.getElementById('modal');
+        const text = document.getElementById('log-text');
+        const title = document.getElementById('log-title');
+
+        if (type === 'core') {
+            title.innerText = "⚠️ CẢNH BÁO HỆ THỐNG";
+            title.style.color = "#ff7b72";
+            text.innerHTML = "Hệ thống yêu cầu hiệu chỉnh thủ công.<br><br><strong>Kích hoạt Puzzle 1: CHRONO CALIBRATION</strong><br><em></em>";
+        } else if (type === 'magnus') {
+            title.innerText = "⚠️ KHÓA BẢO MẬT SINH TRẮC HỌC";
+            title.style.color = "#d29922";
+            text.innerHTML = "Phát hiện tệp tin bị mã hóa cấp cao.<br><br><strong>Kích hoạt Puzzle 2: THE CHIMERA LOCK</strong><br><strong>Kích hoạt Puzzle 3: THE EVOLUTION</strong><br><em></em>";
+        }
+        
+        modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('modal').style.display = 'none';
+    }
+</script>
+
+</body>
+</html>
