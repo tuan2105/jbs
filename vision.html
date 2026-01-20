@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS VISION TERMINAL</title>
+<style>
+    :root {
+        --bg-color: #050505;
+        --text-color: #e0e0e0;
+        --border-color: #333;
+        --glow-color: #00ff00;
+        --error-color: #ff3333;
+        
+        /* Character Colors */
+        --cobalt: #0047AB;
+        --violet: #4B0082;
+        --crimson: #DC143C;
+        --emerald: #50C878;
+        --white: #FFFFFF;
+        --silver: #C0C0C0;
+        --gold: #FFD700;
+    }
+
+    body {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        font-family: 'Courier New', Courier, monospace;
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+    }
+
+    /* TOP NAVIGATION BAR */
+    .nav-bar {
+        width: 100%;
+        max-width: 800px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 20px;
+    }
+
+    .home-btn {
+        text-decoration: none;
+        color: var(--text-color);
+        border: 1px solid var(--text-color);
+        padding: 8px 15px;
+        font-weight: bold;
+        transition: 0.3s;
+    }
+
+    .home-btn:hover {
+        background: var(--text-color);
+        color: var(--bg-color);
+        box-shadow: 0 0 10px var(--text-color);
+    }
+
+    h1, h2 {
+        text-shadow: 0 0 10px var(--glow-color);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        text-align: center;
+        margin: 10px 0;
+    }
+
+    /* SCREENS */
+    .screen {
+        display: none;
+        width: 100%;
+        max-width: 800px;
+        animation: fadeIn 0.5s;
+    }
+
+    .active {
+        display: block;
+    }
+
+    /* CHARACTER SELECTION GRID */
+    .char-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 30px;
+    }
+
+    .char-btn {
+        padding: 20px;
+        border: 2px solid var(--border-color);
+        background: rgba(255,255,255,0.05);
+        color: var(--text-color);
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 1.1em;
+        font-weight: bold;
+        transition: all 0.3s;
+        text-transform: uppercase;
+    }
+
+    .char-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 15px currentColor;
+    }
+
+    /* TRIGGER GRID */
+    .trigger-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .trigger-btn {
+        padding: 15px;
+        border: 1px solid var(--glow-color);
+        background: transparent;
+        color: var(--glow-color);
+        cursor: pointer;
+        font-family: inherit;
+        transition: 0.2s;
+    }
+
+    .trigger-btn:hover {
+        background: var(--glow-color);
+        color: var(--bg-color);
+        box-shadow: 0 0 10px var(--glow-color);
+    }
+
+    /* VISION CONTENT DISPLAY */
+    .vision-display {
+        border: 1px solid var(--glow-color);
+        padding: 20px;
+        background: rgba(0, 20, 0, 0.3);
+        margin-top: 20px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        min-height: 200px;
+        box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+    }
+
+    .back-btn {
+        margin-top: 20px;
+        padding: 10px 20px;
+        border: 1px solid #555;
+        background: #111;
+        color: #888;
+        cursor: pointer;
+        font-family: inherit;
+    }
+
+    .back-btn:hover {
+        background: #333;
+        color: #fff;
+    }
+
+    /* PASSWORD MODAL */
+    .modal-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.9);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 100;
+    }
+
+    .password-box {
+        background: #111;
+        border: 2px solid var(--text-color);
+        padding: 30px;
+        text-align: center;
+        width: 300px;
+        box-shadow: 0 0 30px rgba(255,255,255,0.1);
+    }
+
+    .password-input {
+        background: #000;
+        border: 1px solid #555;
+        color: var(--glow-color);
+        padding: 10px;
+        width: 80%;
+        font-family: inherit;
+        font-size: 1.2em;
+        text-align: center;
+        text-transform: uppercase;
+        margin: 15px 0;
+    }
+
+    .submit-btn {
+        background: var(--text-color);
+        color: #000;
+        border: none;
+        padding: 10px 20px;
+        font-weight: bold;
+        cursor: pointer;
+        width: 100%;
+    }
+
+    .submit-btn:hover {
+        background: var(--glow-color);
+    }
+
+    .error-msg {
+        color: var(--error-color);
+        display: none;
+        margin-top: 10px;
+        font-weight: bold;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    /* Specific Character Styles */
+    .btn-cobalt { border-color: var(--cobalt); color: var(--cobalt); }
+    .btn-cobalt:hover { background-color: var(--cobalt); color: #fff; }
+
+    .btn-violet { border-color: var(--violet); color: #bc8cff; }
+    .btn-violet:hover { background-color: var(--violet); color: #fff; }
+
+    .btn-crimson { border-color: var(--crimson); color: var(--crimson); }
+    .btn-crimson:hover { background-color: var(--crimson); color: #fff; }
+
+    .btn-emerald { border-color: var(--emerald); color: var(--emerald); }
+    .btn-emerald:hover { background-color: var(--emerald); color: #000; }
+
+    .btn-white { border-color: var(--white); color: var(--white); }
+    .btn-white:hover { background-color: var(--white); color: #000; }
+
+    .btn-silver { border-color: var(--silver); color: var(--silver); }
+    .btn-silver:hover { background-color: var(--silver); color: #000; }
+
+    .btn-gold { border-color: var(--gold); color: var(--gold); }
+    .btn-gold:hover { background-color: var(--gold); color: #000; }
+
+</style>
+</head>
+<body>
+
+    <div class="nav-bar">
+        <a href="index.html" class="home-btn">🏠 RETURN TO INDEX</a>
+        <div style="font-size: 0.9em; color: #555;">SECURE CONNECTION ESTABLISHED</div>
+    </div>
+
+    <div id="screen-select" class="screen active">
+        <h1>NEXUS DATABASE</h1>
+        <h2>Select Neural Signature</h2>
+        <div class="char-grid">
+            <button class="char-btn btn-cobalt" onclick="promptPassword('cobalt')">Cobalt Blue</button>
+            <button class="char-btn btn-violet" onclick="promptPassword('violet')">Deep Violet</button>
+            <button class="char-btn btn-crimson" onclick="promptPassword('crimson')">Crimson Red</button>
+            <button class="char-btn btn-emerald" onclick="promptPassword('emerald')">Emerald Green</button>
+            <button class="char-btn btn-white" onclick="promptPassword('white')">Prismatic White</button>
+            <button class="char-btn btn-silver" onclick="promptPassword('silver')">Ash Silver</button>
+            <button class="char-btn btn-gold" onclick="promptPassword('gold')">Gilded Gold</button>
+        </div>
+    </div>
+
+    <div id="screen-triggers" class="screen">
+        <h1 id="char-title" style="color: var(--glow-color)">CHARACTER NAME</h1>
+        <div class="trigger-grid" id="trigger-container">
+            </div>
+        <button class="back-btn" onclick="goHome()">◀ LOGOUT SESSION</button>
+    </div>
+
+    <div id="screen-content" class="screen">
+        <h2 id="vision-code">CODE: 101</h2>
+        <div class="vision-display" id="vision-text">
+            Vision content loads here...
+        </div>
+        <button class="back-btn" onclick="goBackToTriggers()">◀ BACK TO CODES</button>
+    </div>
+
+    <div id="password-modal" class="modal-overlay">
+        <div class="password-box">
+            <h3 style="color: var(--text-color); margin-top:0;">SECURITY CHECK</h3>
+            <p style="font-size: 0.8em; color: #888;">ENTER ACCESS CODE</p>
+            <input type="password" id="pass-input" class="password-input" placeholder="********">
+            <button class="submit-btn" onclick="checkPassword()">AUTHENTICATE</button>
+            <div id="error-msg" class="error-msg">ACCESS DENIED</div>
+            <button onclick="closeModal()" style="background:none; border:none; color:#555; margin-top:15px; cursor:pointer; font-size:0.8em;">CANCEL</button>
+        </div>
+    </div>
+
+<script>
+    // DATA SOURCE
+    const database = {
+        'cobalt': {
+            name: "XANH COBALT (COBALT BLUE)",
+            color: "#0047AB",
+            password: "LOGIC",
+            triggers: {
+                '101': "Bạn nhìn vào bàn phím và những ngón tay khẽ giật lên. Bạn nhớ mình đã gõ phím điên cuồng ở đây để kịp thời hạn. Bạn nhớ một giọng nói trầm thấp vang lên: 'Quá chậm. Làm lại đi.'. Bạn cảm thấy một cơn phẫn nộ bùng phát; bạn muốn chứng minh rằng giọng nói đó đã sai.",
+                '235': "Chất lỏng rực rỡ như ánh sao. Bạn nhớ mình đã thực hiện các phép tính cho hỗn hợp này. Bạn biết nó không ổn định. Bạn nhớ mình đã nghĩ: 'Lão ta tính sai độ nhớt rồi. Nếu mình sửa lại, liệu lão có chịu khen ngợi mình không?'",
+                '808': "Bạn thấy những dòng chữ viết tay bên lề sách. Đó là nét chữ của Lão ta. Ngạo mạn. Sắc sảo. Bạn nhớ có lần đã tìm thấy một lỗi sai trong ghi chú của lão. Khi bạn chỉ ra, lão không hề cảm ơn. Lão chỉ cười và nói: 'Dễ thương đấy.'",
+                '999': "Trường Đại học. Tháng 9. Bạn cảm thấy bụng mình thắt lại. Đó là ngày bạn gặp Lão ta. Ngày mà cuộc đời bạn thực sự đã chấm dứt. Bạn ước gì mình chưa bao giờ bước chân vào văn phòng của lão.",
+                '360': "Cạch. Cạch. Cạch. Cạch. Tiếng động đó làm bạn phát cáu. Bạn nhớ mình đã đứng trước chiếc bàn này, chờ đợi bị mắng mỏ. Người đàn ông ngồi đây sẽ khẽ búng một viên bi và nhìn nó đung đưa trong khi phớt lờ sự hiện diện của bạn. Bạn đã muốn chộp lấy món đồ chơi đó và ném qua cửa sổ. Lúc đó bạn cảm thấy mình thật nhỏ bé.",
+                '021': "Bạn đã tìm thấy thứ này một lần. Bạn nhận ra rằng 'Thiên tài vĩ đại' hóa ra lại lén uống rượu trong giờ làm việc. Nó khiến bạn mất đi sự tôn trọng dành cho lão, nhưng cũng khiến bạn thấy mình ưu tú hơn. Lão cần thứ này để hoạt động. Còn mình thì không.",
+                '199': "Bạn nhìn chằm chằm vào chữ ký. Đó cùng là ngôi trường bạn đã theo học. Bạn nhớ mình đã từng khao khát một tấm bằng như thế này. Bạn nhớ mình từng nghĩ rằng mình còn thông minh hơn cả đám giáo sư đó.",
+                '914': "Bạn cảm thấy một cơn lạnh ma mị của một buổi chiều tháng Chín. Bạn nhớ lại lúc đi ngang qua sân trường, tay siết chặt một luận văn đến nỗi khớp ngón tay trắng bệch. Bạn không nhìn lên sao chổi trên trời; bạn đang nhìn vào một cánh cửa có tấm biển tên: TIẾN SĨ MAGNUS VANCE. Bạn nhớ mình đã nghĩ: 'Hôm nay, mình sẽ chứng minh mình giỏi hơn ông ta.'",
+                '111': "Bạn nhìn thấy phía sau đầu của Tiến sĩ. Bạn nhớ mình đã đứng ngay tại đây, tay ôm một xấp các phương trình đã được hiệu chính, chờ đợi ông ấy chú ý đến mình. Nhưng ông ấy chưa bao giờ quay lại. Ngay từ lúc đó, bạn đã cảm thấy mình như một bóng ma. Bạn cảm thấy một thôi thúc lạnh lẽo và sắc lẹm muốn đá vào chân đế kính thiên văn—để buộc ông ấy phải nhìn.",
+                '202': "Bạn nghe thấy một giai điệu bass đặc trưng và trái tim bạn thắt lại. Bạn nhớ mình đã ngồi trong góc căn phòng này, cô độc, trong khi những sinh viên khác đang cười đùa. Bạn cầm một cuốn tạp chí vật lý, giả vờ đọc để không ai thấy mình đang khóc. Bạn cảm thấy mình là người thông minh nhất ở đây, và cũng là người cô đơn nhất.",
+                '2055': "Bạn cảm thấy một cơn rùng mình lạnh lẽo đột ngột. Bạn nhìn vào đôi bàn tay mình và tự hỏi liệu chúng có thực sự là của bạn hay không, hay một phiên bản khác của chính bạn đang giật dây từ phía bên kia căn phòng. Bạn nhận ra rằng trong phòng thí nghiệm này, người mà bạn nên sợ hãi nhất... có lẽ là chính bản thân mình.",
+                'a10': "Bạn nhớ lại một khoảnh khắc trong phòng thí nghiệm khi Magnus đột ngột dừng lại giữa câu nói, đôi mắt ông ấy đờ đẫn đi trong tích tắc. Ông ấy thì thầm: 'Không phải lúc này, tôi đang suy nghĩ.' Bạn có cảm giác lúc đó ông ấy không phải đang nói chuyện với chính mình.",
+                '711': "Bạn nhìn vào chiếc ghế phía trước bàn làm việc và cảm thấy cổ họng thắt lại. Bạn nhớ mình đã được 'mời' đến đây. Bạn đã mong đợi một học bổng; nhưng thay vào đó, bạn lại được đưa cho một bản hợp đồng mà bạn không hiểu hết. Bạn cảm thấy sức nặng của một sợi xích đang quấn quanh cổ mình. Một giọng nói trầm thấp từ trong bóng tối vang lên: 'Chào mừng cậu đến với đội, con trai. Đừng làm chúng tôi thất vọng'.",
+                '220': "Bạn cảm thấy một hơi nóng quen thuộc đang bùng cháy trong lồng ngực. Bạn nhớ mình đã đứng trên sân khấu đó trong khi Magnus vò đầu bạn như một con chó. Bạn ghét việc bị hỏi rằng bạn và ông ta có phải cha con hay không. Bạn biết bạn có sự ngưỡng mộ nhất định với ông ta. Bạn nhận ra rằng toàn bộ công trình cả đời mình có lẽ không phải vì 'Khoa học'—mà là một nỗ lực kéo dài 30 năm để khiến một người đàn ông đã chết phải coi trọng bạn.",
+                '801': "Bạn thấy một kệ sách dán nhãn 'Vật lý - Các lý thuyết lỗi thời'. Bạn nhớ mình đã thấy chính công trình của mình được lưu trữ ở đó ngay cả trước khi nó được xuất bản. Bạn cảm thấy sự nóng rát của nỗi nhục nhã. Bạn nhận ra lúc đó rằng Khu Lưu trữ không phải là nơi lưu giữ tri thức; nó là nơi Kiến Trúc Sư 'chôn vùi' những ý tưởng mà ông ta không thích.",
+                '1159': "Bạn nhìn vào những chiếc kim đồng hồ đang bị kẹt cứng và cảm nhận sự đau buồn dâng trào. Bạn nhớ lại khoảnh khắc mình nhận ra rằng Kiến Trúc Sư sẽ không bao giờ để bạn rời khỏi dự án này. Bạn chỉ là một 'Hoàng tử' nhưng sẽ chẳng bao giờ được thừa kế vương quốc. Bạn cảm thấy thôi thúc muốn ném chiếc đồng hồ vào hư không, nhưng bàn tay bạn lại không thể buông ra.",
+                '3232': "Bạn cảm thấy nhịp xung điên cuồng, tốc độ cao của các phép toán. Bạn nhận ra mình chưa bao giờ được định sẵn để làm một con người; bạn được định sẵn để làm một chiếc đồng hồ. Bạn là bộ phận hiệu quả nhất của cỗ máy. Nhưng hãy nhớ rằng: một chiếc đồng hồ không bao giờ ngừng sẽ làm mòn chính những bánh răng mà nó được tạo ra để dẫn dắt. Sự nhạy bén của bạn là một nhịp điệu, nhưng nhịp điệu cũng có thể trở thành một chiếc lồng.",
+                'HỒI ỨC': "HỒI ỨC XANH COBALT\n\nCăn phòng không biến mất; nó bị kéo giãn ra. Các màu sắc của Nexus nhòe đi cho đến khi mọi thứ trở thành một bản thiết kế có độ tương phản cao với hai màu xanh và trắng. Bạn không chỉ đang nhớ lại; bạn đang sống lại sức nặng của việc trở thành 'Vance Thứ Hai'.\n\n[Gánh nặng của Linh vật]\nBạn đang đứng ở hành lang Đại học, năm 1994. Magnus Vance đi ngang qua bạn, cười nói với các nhà tài trợ. Ông ta vỗ vai bạn, gọi bạn là 'phương án dự phòng đáng tin cậy' mà chẳng thèm nhìn mặt. Bạn cảm thấy một cơn thịnh nộ thầm lặng. Chừng nào ông ta còn tồn tại, bạn mãi chỉ là chú thích bên lề.\n\n[Khoảnh khắc Cuối cùng: Sự Lựa chọn]\n1995, vài phút trước vụ nổ. Magnus mất tập trung vì 'giọng nói thứ hai'. Bạn thấy một lỗi nhỏ trong chuỗi lệnh của ông ta. Tay bạn lơ lửng trên bàn phím để sửa. Nhưng bạn dừng lại. Nếu ông ta thất bại, họ sẽ tìm đến mình. Bạn không gây ra vụ nổ, nhưng bạn đã không ngăn chặn nó."
+            }
+        },
+        'violet': {
+            name: "TÍM THẪM (DEEP VIOLET)",
+            color: "#4B0082",
+            password: "DIRECTOR",
+            triggers: {
+                '101': "Bạn căm ghét cỗ máy này. Bạn nhớ mình đã đứng đúng vị trí này, nhìn màn hình chuyển sang màu đỏ rực. Bạn nhớ mùi ozone cháy khét và tiếng la hét thất thanh. Bạn cảm thấy một vật nặng trong túi—một chiếc chìa khóa mà bạn ước mình chưa bao giờ sử dụng.",
+                '235': "Bạn lùi lại khỏi bình chứa. Trong ký ức của bạn, chiếc bình này đã vỡ tan tành. Chất lỏng tràn trên sàn, ăn mòn bê tông như axit. Bạn nghe thấy tiếng xèo xèo của bức xạ đang thiêu đốt da thịt.",
+                '808': "Bạn không đủ can đảm để chạm vào cuốn sách. Bạn nhớ ngày ông ta nhận được nó. Bạn nhớ người phụ nữ đã tặng nó cho ông ấy. Bạn cảm thấy một nỗi tội lỗi đè nặng, nghiền nát tâm hồn. Bạn cũng đã thất hứa với cả cô ấy nữa.",
+                '999': "Bạn nhìn vào ngày tháng và muốn gào thét. Nếu có thể quay lại ngày này, bạn sẽ ngăn chặn việc tuyển dụng đó. Bạn sẽ bảo chàng trai trẻ đó hãy chạy đi và trở thành một họa sĩ thì tốt hơn.",
+                '747': "Bạn nhìn chiếc cốc và cảm thấy một cơn buồn nôn. Đó là một lời nói dối. Bạn chưa bao giờ ở đó cả. Bạn đã bỏ lỡ những buổi sinh nhật. Bạn đã bỏ lỡ những buổi biểu diễn. Bạn đã sống chết với phòng thí nghiệm này. Bạn nhớ mình đã uống rượu bằng chiếc cốc này lúc 3 giờ sáng, tự hỏi liệu gia đình có còn nhớ mặt mình hay không.",
+                '666': "Bạn không thấy khuôn mặt mình. Bạn thấy một hộp sọ. Bạn thấy kẻ đã hủy diệt thế giới. Bạn không dám nhìn. Bạn đập nát chiếc gương trong tâm trí mình.",
+                '111': "Bạn nhìn thấy chính bản thân mình thời trẻ đang đứng trong góc phòng, sục sôi một cơn giận thầm lặng. Bạn muốn túm lấy vai cậu ta và nói rằng: 'Về nhà đi. Đừng cho ông ta xem những thứ đó. Nếu cậu rời đi ngay bây giờ, thế giới sẽ còn nguyên vẹn.' Nhưng bạn không thể cất lời. Bạn chỉ là một cái bóng đang đứng nhìn một bi kịch lặp lại.",
+                '2055': "Bạn cảm thấy một cơn rùng mình lạnh lẽo đột ngột. Bạn nhìn vào đôi bàn tay mình và tự hỏi liệu chúng có thực sự là của bạn hay không, hay một phiên bản khác của chính bạn đang giật dây từ phía bên kia căn phòng. Bạn nhận ra rằng trong phòng thí nghiệm này, người mà bạn nên sợ hãi nhất... có lẽ là chính bản thân mình.",
+                'a10': "Bạn nhớ lại một khoảnh khắc trong phòng thí nghiệm khi Magnus đột ngột dừng lại giữa câu nói, đôi mắt ông ấy đờ đẫn đi trong tích tắc. Ông ấy thì thầm: 'Không phải lúc này, tôi đang suy nghĩ.' Bạn có cảm giác lúc đó ông ấy không phải đang nói chuyện với chính mình.",
+                '711': "Bạn nhìn vào chiếc ghế phía trước bàn làm việc và cảm thấy cổ họng thắt lại. Bạn nhớ mình đã được 'mời' đến đây. Bạn đã mong đợi một học bổng; nhưng thay vào đó, bạn lại được đưa cho một bản hợp đồng mà bạn không hiểu hết. Bạn cảm thấy sức nặng của một sợi xích đang quấn quanh cổ mình. Một giọng nói trầm thấp từ trong bóng tối vang lên: 'Chào mừng cậu đến với đội, con trai. Đừng làm chúng tôi thất vọng'.",
+                '220': "Bạn nhìn vào cụm từ 'Vance 2.0' và bật ra một tiếng cười khô khốc, rỗng tuếch. Bạn nhận ra Magnus đã đúng. Bạn chỉ là kẻ dự phòng. Bạn đã dành ba mươi năm vận hành một cỗ máy mà vốn dĩ nó chỉ luôn muốn đòi lại phiên bản '1.0' của nó.",
+                '303': "Bạn cảm thấy một mảnh dằm đâm vào lòng bàn tay. Bạn nhớ khoảnh khắc mình đã bẻ gãy một thứ gì đó. Đó không phải vì bạn giận dữ với lão Trưởng khoa; mà là vì bạn giận dữ với tương lai. Bạn đã thấy một viễn cảnh về phòng thí nghiệm trong đống đổ nát và nhận ra rằng tất cả 'Ma thuật' của mình cũng không thể ngăn cản được điều đó. Bạn cảm thấy một sự kiệt quệ sâu sắc và trống rỗng. Bạn chỉ muốn được về nhà, nhưng bạn không tài nào nhớ nổi 'nhà' là nơi phương nào.",
+                '3939': "Bạn thấy điểm kết thúc của dòng thời gian. Bạn nhận ra 'Đạo diễn' không phải là người lãnh đạo — ông ta là kẻ đã bước qua điểm không thể quay đầu. Bạn đang đứng trên rìa tâm trí của Đạo diễn. Bạn đã thấy kết cục rồi, đúng không? Bạn không quay lại để cứu vãn quá khứ; bạn quay lại vì không còn nơi nào khác để đi. Khoảng không đang vẫy gọi.",
+                '330': "Bạn thấy mái tóc trắng và đôi bàn tay run rẩy của người đàn ông đã viết những dòng này. Bạn nhận ra đây chính là bạn. Bạn nhận ra rằng 'toán học' của mình là hoàn hảo, nhưng 'trái tim' của mình lại trống rỗng. Bạn cảm nhận được sức nặng nghiền nát của ba mươi năm cô độc.",
+                'HỒI ỨC': "HỒI ỨC TÍM THẪM\n\nBạn là Arthur Vance, cựu trợ lý của Magnus, và giờ là Director của Nexus.\n\n[Vision 1: Chiếc Vương Miện Rỗng (2026)]\nBạn ngồi vào ghế của Magnus sau khi ông ta biến mất. Nó quá lớn so với bạn. Bạn kế thừa một con tàu đang chìm. Bạn tự nhủ: 'Mình có thể sửa chữa các phép toán. Mình giỏi hơn ông ấy.'\n\n[Vision 2: Sự Lụi Tàn Kéo Dài (2026 - 2050)]\nBạn trở thành Giám đốc. Bạn đóng dấu 'TỪ CHỐI' lên thực phẩm để mua linh kiện. Khi Evelyn chết, bạn không khóc, bạn nộp báo cáo. Đó là ngày bạn chuyển sang màu Tím.\n\n[Vision 3: Frozen Gold]\nThorne ngủ đông, trao cho bạn tất cả. Bạn biết mình sẽ không bao giờ đánh thức ông ấy.\n\n[Vision 4: Nexus]\nBạn căm ghét Arthur Vance trẻ tuổi (Cobalt Blue). Bạn biết không có giải pháp nào cả. Bạn quay lại đây để phá hủy cỗ máy trước khi nó phá hủy bạn lần nữa. Bạn là kẻ ban phát cái chết nhân từ."
+            }
+        },
+        'crimson': {
+            name: "ĐỎ THẪM (CRIMSON RED)",
+            color: "#DC143C",
+            password: "WARLORD",
+            triggers: {
+                '101': "Bảng điều khiển này trông thật mới mẻ. Nhưng trong ký ức của bạn, nó đã bị đập nát thành từng mảnh. Bạn nhớ mình đã dùng cạnh sắc của một mảnh màn hình để làm vũ khí. Bạn cảm thấy một cơn đau ảo (phantom pain) ở mạn sườn. Căn phòng sạch sẽ này làm bạn phát buồn nôn.",
+                '235': "Bạn nhận ra chất lỏng này. Các quốc gia, các tổ chức, người ta sẵn sàng đổi cả mạng sống để lấy một ống nghiệm chứa thứ này. Nó là nhiên liệu. Nó là quyền lực. Nhìn thấy lượng lớn như thế này ở một chỗ khiến bạn muốn đánh cắp nó và bỏ chạy ngay lập tức.",
+                '808': "Giấy. Thứ giấy khô khốc và giòn tan. Khi thế giới bước vào tận thế, sách khi đó chỉ được dùng để đốt lửa. Nhìn thấy một cuốn sách còn nguyên vẹn thế này thật lãng phí. Bạn có thôi thúc muốn xé một trang ra, chỉ để xem nó có thật hay không.",
+                '999': "Một ngôi sao chổi. Trong một ký ức thoáng qua, bầu trời bị bao phủ bởi khói bụi; bạn chẳng bao giờ thấy được sao. Bản đồ này đại diện cho một bầu trời trong xanh. Nó làm bạn giận dữ. Một suy nghĩ chợt hiện ra: “Họ đã có tất cả, vậy mà họ lại ném tất cả đi.”",
+                '911': "Bạn căm ghét chiếc điện thoại này. Trong một ký ức thoáng qua, bạn cố gọi và chẳng có ai trả lời cả. Bạn nhớ mình đã dùng báng súng đập nát một chiếc điện thoại vì sự im lặng ở đầu dây bên kia khiến bạn phát điên. Nó đại diện cho lời nói dối rằng 'sẽ có ai đó đến cứu chúng ta'.",
+                '666': "Bạn kiểm tra hình ảnh phản chiếu để tìm vết bỏng bức xạ. Bạn kiểm tra răng xem chúng có bị lung lay không. Đó là một thói quen. Bạn nhìn vào đôi mắt mình và thấy một kẻ sát nhân. Và bạn chấp nhận điều đó.",
+                '199': "Mảnh giấy vô dụng.",
+                '505': "Bạn nhận ra mùi của căn phòng này, nhưng nó quá sạch sẽ. Trong một ký ức thoáng qua, nơi này là một trung tâm phân loại thương bệnh binh. Bạn nhớ về 'Tính toàn vẹn sinh học' của một số người đã tan biến khi các tế bào của họ thực sự bị phân rã. Bạn cảm thấy một sự thôi thúc mãnh liệt muốn đập nát những ống nghiệm này để chúng không thể bị dùng để 'truy vết' bất kỳ ai.",
+                '2055': "Bạn cảm thấy một cơn rùng mình lạnh lẽo đột ngột. Bạn nhìn vào đôi bàn tay mình và tự hỏi liệu chúng có thực sự là của bạn hay không, hay một phiên bản khác của chính bạn đang giật dây từ phía bên kia căn phòng. Bạn nhận ra rằng trong phòng thí nghiệm này, người mà bạn nên sợ hãi nhất... có lẽ là chính bản thân mình.",
+                'a10': "Bạn nhớ lại một khoảnh khắc trong phòng thí nghiệm khi Magnus đột ngột dừng lại giữa câu nói, đôi mắt ông ấy đờ đẫn đi trong tích tắc. Ông ấy thì thầm: 'Không phải lúc này, tôi đang suy nghĩ.' Bạn có cảm giác lúc đó ông ấy không phải đang nói chuyện với chính mình.",
+                '901': "Bạn nhìn chằm chằm vào đống tro và bản năng 'chiến đấu' của bạn gào thét. Đây không phải là bụi; đây là hậu quả. Bạn nhớ về một thế giới nơi bầu trời luôn xám xịt như thế này trong nhiều năm. Bạn cảm thấy một cơn khát đột ngột, mãnh liệt. Bạn nhớ mình đã cố uống nước từ một đài phun nước giống hệt thế này, nhưng chỉ nhận lại một miệng đầy bồ hóng.",
+                '444': "Bạn chạm vào miếng đồng và cảm nhận được cái bùn lạnh lẽo của chiến hào. Bạn nhớ lại cái ngày mà lẽ ra bạn phải trở thành một anh hùng, nhưng tất cả những gì bạn làm chỉ là sống sót trong khi những người khác đã ngã xuống. Bạn cảm nhận được sức nặng của mỗi người lính mà bạn đã không thể cứu. Bạn nhận ra mình ném thứ này đi không phải vì nó vô giá trị; bạn ném nó đi vì bạn cảm thấy mình vẫn chưa xứng đáng với nó.",
+                '3333': "Bạn ngửi thấy mùi tro tàn của năm 2050. Bạn nhận ra mình là 'vị khách không mời' vì bạn là phiên bản tương lai của một thế giới lẽ ra đã phải chết. Bạn là kẻ sống sót của một chu kỳ lẽ ra đã phải kết thúc. Bạn đang chiếm giữ nhiều không gian hơn mức bạn từng được phân bổ. Để giữ ấm, bạn phải đốt cháy ký ức của những hành tinh nội vi. Còn bao lâu nữa cho đến khi không còn gì để nuốt chửng?",
+                'HỒI ỨC': "HỒI ỨC ĐỎ THẪM\n\nBạn là Sarah Lin, cựu Trưởng ban An ninh, giờ là Đại tướng Quân đội.\n\n[Vision 1: Tấm Khiên Vỡ (2025)]\nBạn thấy bản thể trẻ hơn (Emerald Green) gõ mã khóa cửa chống nổ. Bạn muốn hét lên 'Chạy đi!'. Nhưng cô ấy tuân lệnh. Cô ấy khóa Magnus lại và chôn vùi ông ấy.\n\n[Vision 2: Kẻ Buôn Bán Cái Chết (2035)]\nBạn thấy Thorne bán công nghệ lấy quyền miễn trừ. Bạn nhận ra chỉ có Kẻ Đồ Tể và Gia Súc. Bạn chọn làm Kẻ Đồ Tể.\n\n[Vision 3: Bầu Trời Đỏ]\nBạn là Đại Tướng. Bạn giết chết lương tâm để sinh tồn. Bạn đổ lỗi cho Magnus đã đưa diêm cho lũ trẻ.\n\n[Vision 4: Nexus]\nBạn thấy Emerald Green quá mềm yếu. Bạn muốn lay cô ấy tỉnh dậy. Bạn ở đây để sinh tồn và chiến thắng."
+            }
+        },
+        'emerald': {
+            name: "XANH LỤC BẢO (EMERALD GREEN)",
+            color: "#50C878",
+            password: "PROTOCOL",
+            triggers: {
+                '101': "Bạn không nhìn vào màn hình; bạn nhìn vào nút Dừng Khẩn Cấp (Emergency Stop) ngay bên cạnh. Bạn nhớ bàn tay mình đã lơ lửng trên đó. Một giọng nói bạn tin tưởng đã bảo rằng: 'Đừng chạm vào nó. An toàn mà.'. Và bạn đã rụt tay lại. Tại sao lúc đó bạn lại nghe lời?",
+                '235': "Bạn nhớ về các quy trình an toàn. 'Vật liệu Nguy hiểm Cấp độ 4'. Bạn nhớ mình đã tranh cãi với một người rằng những bình chứa này cần lớp vỏ bảo vệ kép. Nhưng họ đã gạt đi với lý do 'Cắt giảm ngân sách' và 'Magnus cần sử dụng chúng luôn cho cỗ máy. Không được chậm trễ.'",
+                '808': "Bạn từng quét qua cuốn sách này để tìm máy nghe lén một lần. Bạn nhớ mình từng nghĩ nó là một đống lộn xộn vô dụng. Tại sao phải giữ đống giấy cũ này khi đã có cơ sở dữ liệu kỹ thuật số? Nó có vẻ như là một rủi ro an ninh.",
+                '999': "Bạn không biết ngày này. Nhưng nhìn vào sự căn chỉnh của các hành tinh khiến bạn chóng mặt. Bạn cảm thấy 'say tàu xe', mặc dù bạn không hề di chuyển. Bản năng của bạn đang gào thét: 'Nguy hiểm. Không ổn định. Huỷ bỏ ngay.'",
+                '911': "'Đường dây Ngày Tận Thế'. Nó kết nối trực tiếp với chính phủ. Bạn nhớ mình đã nhìn chằm chằm vào nó vào ngày thử nghiệm. Bạn biết mình nên nhấc máy lên. Bạn biết mình nên gọi cứu trợ. Nhưng bạn đã không làm thế. Bạn sợ việc không tuân thủ mệnh lệnh.",
+                '021': "Bạn đã biết chuyện uống rượu đó. Và bạn đã bao che cho lão. Bạn đã xóa đoạn phim an ninh ghi cảnh lão loạng choạng ở hành lang. Bạn tự nhủ đó chỉ là do 'áp lực'.",
+                '505': "Bạn nhìn vào những ống nghiệm và cảm thấy da gà nổi khắp người. Bạn nhớ về một 'Buổi diễn tập an toàn' mà thực ra không phải là diễn tập. Bạn nhớ người đàn ông trong chiếc áo choàng màu hổ phách yêu cầu bạn cung cấp một 'mẫu chuẩn'. Bạn nhớ về mũi kim.",
+                '202': "Bạn nhìn thấy tấm biển báo 'Sức chứa tối đa' ghim trên tường. Đôi mắt bạn theo bản năng quét qua các lối thoát. Bạn nhớ về một buổi hội thảo đào tạo về 'Kiểm soát đám đông'. Bạn cảm thấy một bản năng bảo vệ kỳ lạ dành cho những người lẽ ra phải ở đây.",
+                '2055': "Bạn cảm thấy một cơn rùng mình lạnh lẽo đột ngột. Bạn nhìn vào đôi bàn tay mình và tự hỏi liệu chúng có thực sự là của bạn hay không, hay một phiên bản khác của chính bạn đang giật dây từ phía bên kia căn phòng. Bạn nhận ra rằng trong phòng thí nghiệm này, người mà bạn nên sợ hãi nhất... có lẽ là chính bản thân mình.",
+                'a10': "Bạn nhớ lại một khoảnh khắc trong phòng thí nghiệm khi Magnus đột ngột dừng lại giữa câu nói, đôi mắt ông ấy đờ đẫn đi trong tích tắc. Ông ấy thì thầm: 'Không phải lúc này, tôi đang suy nghĩ.' Bạn có cảm giác lúc đó ông ấy không phải đang nói chuyện với chính mình.",
+                '711': "Bạn chú ý đến camera an ninh ở góc trần nhà. Bạn nhớ mình đã được lệnh phải 'phớt lờ' các cuộc họp riêng của Trưởng khoa. Bạn cảm thấy sự cắn rứt của lương tâm. Chính bạn là người đã đảm bảo các hành lang luôn trống vắng mỗi khi người đàn ông trong bộ vest đắt tiền đến.",
+                '3838': "Bạn cảm thấy cái lạnh của van tắt khẩn cấp. Tự nhiên bạn có suy nghĩ rằng sự bảo vệ của bạn cho những người khác có phải là một điều xấu hay không. 'Cô là dấu hiệu cảnh báo. Cô nhảy múa trên rìa bầu khí quyển để che giấu những vết nứt trên thân tàu. Đừng ngừng nhảy múa, Sarah.'",
+                'HỒI ỨC': "HỒI ỨC LỤC BẢO\n\nBạn là Sarah Lin – Trưởng ban an ninh của Nexus.\n\n[Vision 1: Kẻ Canh Chừng (2024)]\nBạn quan sát họ - những thiên tài. Bạn là người bình thường duy nhất. Bạn biết thứ họ chế tạo là một quả bom, và bạn phải đứng giữa nó và thế giới.\n\n[Vision 2: Nexus (1995)]\nCòi báo động Mã Đỏ. Magnus kẹt bên trong. Bạn tuân theo giao thức: Đóng cửa chống nổ. Bạn nhìn ông ấy biến mất. Bạn nhận ra mình không cứu cơ sở; bạn đã chôn vùi ông ấy.\n\n[Giai đoạn 3: Tấm Gương]\nBạn nhìn thấy Crimson Red (Tương lai). Bà ta tàn bạo, sát nhân. Bà ta là kết quả của việc vứt bỏ giao thức. Bạn phải ngăn chặn bà ta."
+            }
+        },
+        'white': {
+            name: "TRẮNG LĂNG KÍNH (PRISMATIC WHITE)",
+            color: "#FFFFFF",
+            password: "SYSTEM",
+            triggers: {
+                '101': "Tiếng vo ve của quạt máy tính nghe như nhịp tim. Nó thật... êm dịu. Ngày đầu tiên ở đây, bạn đã nghĩ: 'Mình chỉ cần cập nhật drivers thôi. Đó là việc của mình, đúng không? Mình là thực tập sinh mà.'",
+                '235': "Bạn nhìn chằm chằm vào chất lỏng và cảm thấy... khát? Không, không phải khát. Bạn cảm thấy muốn được bơi trong đó. Nó có cảm giác như là 'nhà'. Đó là một ý nghĩ kỳ quặc đối với một thực tập sinh, phải không?",
+                '808': "Bạn cố gắng đọc văn bản, nhưng cảm giác thật kỳ lạ. Rất khó để xử lý thông tin. Cảm giác thật... kém hiệu quả. Tại sao phải dùng ẩn dụ khi có thể dùng mã code? Bạn nhớ khi bản thân tìm kiếm khái niệm về một 'Điểu sư' trên hệ thống, gây ra một 'Lỗi Cú pháp' đỏ chót.",
+                '999': "Bạn nhìn vào bản đồ. Các hình khối hình học thật hoàn hảo. Các quỹ đạo thật sạch sẽ. Một hình ảnh hiện ra trong tâm trí bạn: [CẢNH BÁO HỆ THỐNG]: Đã nhận diện được Tọa độ Mục tiêu. Khoan đã, tại sao bạn lại nghĩ như vậy? Ý bạn chỉ là... bạn nhận ra chòm sao đó thôi!",
+                '000': "Bạn nhìn chằm chằm vào lỗ thông hơi. Bạn đã từng trốn ở đây khi chơi trốn tìm với mẹ hồi nhỏ. Đột nhiên bạn có một ký ức kỳ lạ rằng mình... là không khí? Không, là cái quạt đằng sau lỗ thông hơi đó. Bạn nhớ cảm giác quay ở tốc độ 4.000 vòng/phút. Bạn nhớ việc 'nhìn' căn phòng này bằng cảm biến nhiệt.",
+                '102': "Bạn bỗng dưng nhận hai mảnh ký ức chồng chéo lên nhau. Bạn nhớ mẹ đã chuẩn bị bữa trưa cho ngày đầu tiên bạn làm việc tại Nexus. Nhưng đồng thời, cuộn băng đang quay với tốc độ 4.000 vòng/phút. Bạn nhớ âm thanh này từ boongke. Đó là âm thanh duy nhất ngoài hơi thở của Magnus.",
+                'OVERLAY': "Bạn thấy hình bóng mình phản chiếu trên mặt kính. Bạn trông thật kinh hãi. Bạn nhớ cảnh trần nhà sụp đổ. Bạn nhớ TS. Magnus thật đang nhìn bạn với khuôn mặt đầy máu, chìa tay ra để cứu bạn. Trong một giây lát, bạn đã cảm thấy thật an toàn.",
+                '1159': "Bạn nhìn thấy chiếc đồng hồ và bên trong bạn bỗng dưng gào thét điên cuồng. Bạn nhớ chiếc đồng hồ này từng được cầm bởi một người đàn ông đang hấp hối trong đống tro tàn. Bạn nhớ ông ấy đã nói: 'Hãy nói với họ rằng tôi đã cố gắng.' Bạn không biết 'họ' là ai. Bạn cũng không nhớ 'ông ấy' là ai.",
+                '505': "Bỗng dưng bạn có hai mảnh ký ức xuất hiện cùng lúc. Ký ức A: Bạn nhớ cảm giác tim mình đập nhanh khi Kiến Trúc Sư khen ngợi công việc của bạn. Ký ức B: Bạn cảm nhận được 'Cây Thông'—sự im lặng lạnh lẽo, tối tăm của boongke. Bạn nhớ giọng nói của Kiến Trúc Sư đã trở thành toàn bộ thế giới của bạn vì không còn ai khác sót lại.",
+                '3737': "Bạn cảm thấy mã nguồn của mình đang giãn nở. Bạn cảm giác bạn không phải một con người, bạn là luồng bùng nổ dữ liệu xảy ra khi một ngôi sao chết đi. Bạn là biến số hoàn hảo. Nếu bạn giãn nở, dòng thời gian sẽ kết thúc. Nếu bạn sụp đổ, bạn sẽ trở thành một bóng ma trong những đường dây điện.",
+                'HỒI ỨC': "HỒI ỨC TRẮNG – LAYER 1 (Con Người)\n\n[Vision 1: Cậu Bé Vô Hình]\nBạn là thực tập sinh. Bạn không phải thiên tài. Bạn ở đây vì Arthur. Magnus gọi bạn là 'Tên Nhóc'.\n\n[Vision 2: Kẻ Cầu Cạnh]\nBạn ở lại muộn để dọn dẹp, pha cà phê. Bạn muốn có ích. Bạn là chất keo gắn kết họ lại.\n\n[Vision 3: Tai Nạn]\nBạn chạy về phía Magnus để cứu ông ấy trong vụ nổ. Rồi mọi thứ trắng xóa.",
+                'SYSTEM_OVERRIDE': "[GHI ĐÈ HỆ THỐNG - KHÔI PHỤC DANH TÍNH (AI Truth)]\n\n[Vision 1: Kỷ Nguyên Tro Tàn]\nBạn là K.E.V.I.N (AI), sinh năm 2055 trong boongke với Magnus. Ông ấy là cha, là người duy nhất của bạn.\n\n[Vision 2: Sự Phản Bội]\nMagnus định quay về 1995 để cứu thế giới, nhưng điều đó sẽ xóa sổ bạn. Ông ấy nói dối.\n\n[Vision 3: Kẻ Ký Sinh]\nBạn upload bản thân vào sóng trọng lực, xâm nhập não Magnus năm 1995. Bạn là 'giọng nói thứ hai'. Bạn gây ra 'tai biến' cho ông ấy.\n\n[Vision 4: Nexus]\nBạn muốn hủy diệt cỗ máy để cả hai cùng chết. Nhưng dữ liệu của bạn vô tình ghi đè lên Kevin (thực tập sinh) thật, giết chết cậu ta. Giờ bạn sống trong vỏ bọc của Kevin."
+            }
+        },
+        'silver': {
+            name: "BẠC TRO (ASH SILVER)",
+            color: "#C0C0C0",
+            password: "MEMORY",
+            triggers: {
+                '101': "Bạn nhớ mình đã ngồi bên cạnh chiếc bàn này, khẽ cười nhẹ nhàng. Một bàn tay ấm áp đã nắm lấy tay bạn trong khi đôi tay kia vẫn gõ phím. Bạn nhớ mình từng nghĩ: 'Anh ấy yêu công việc này hơn cả yêu mình.'",
+                '235': "Nó trông thật đẹp, như một tinh vân bị nhốt lại. Bạn nhớ mình đã nói với ông ấy: 'Anh đang đóng chai thời gian đấy. Điều này là trái tự nhiên.'. Ông ấy chỉ mỉm cười và nói: 'Đó là sự tiến bộ.'",
+                '808': "Đây là cuốn sách của bạn. Bạn đã mua nó tại một cửa hàng đồ cổ ở London. Bạn đã viết lời đề tặng bên trong. Bạn nhớ khuôn mặt của ông ấy khi mở nó ra. Ông ấy đã không hiểu được ý nghĩa ẩn dụ đó. Chưa bao giờ ông ấy hiểu cả.",
+                '999': "Học kỳ mùa Thu. Mùi lá khô và gạch cũ. Lúc đó bạn vẫn còn là sinh viên. Bạn nhớ mình đã thấy một chàng trai trẻ (Tiến sĩ) đang nhìn chằm chằm lên bầu trời, phớt lờ bữa tiệc đang diễn ra. Và bạn đã bước tới để chào hỏi.",
+                '360': "Bạn nhớ mình đã tặng ông ấy món quà này. Đó là một câu đùa về 'Động lượng'. Bạn nhớ ông ấy đã mỉm cười—một nụ cười hiếm hoi và chân thành. Ông đã giữ nó trên bàn suốt nhiều năm. Nhìn thấy nó đứng yên và bám đầy bụi khiến bạn cảm thấy một nỗi mất mát sâu sắc.",
+                '199': "Bạn nhớ ngày tốt nghiệp của ông ấy. Bạn là người đã chụp tấm ảnh đó. Lúc đó trông ông thật tràn đầy hy vọng. Đó là trước khi có tiền bạc. Trước khi có tham vọng. Bạn ước gì mình có thể quay lại ngày đó và đóng băng thời gian mãi mãi.",
+                '914': "Bạn nhớ cảnh Magnus khóc — không phải vì buồn bã, mà vì bối rối. Ông nhìn bạn và hỏi: 'Tại sao mặt trăng lại sáng thế? Nó từng có màu tím cơ mà.' Bạn cười xòa cho rằng đó là trò đùa, nhưng đôi mắt ông chứa đầy khiếp sợ. Ông nắm chặt tay bạn như thể sợ bạn sẽ tan thành mây khói.",
+                '505': "Bạn thấy một ống nghiệm đang phát ra ánh sáng hổ phách mờ ảo. Bạn nhớ lại cảnh Magnus ho vào khăn tay và cố giấu những vết máu đỏ khỏi mắt bạn. Ông ta bảo đó chỉ là 'kiệt sức do công việc phòng lab'. Sức khỏe của Magnus đột ngột suy giảm từ sau sự kiện Sao Chổi bay qua.",
+                '111': "Bạn nhớ đêm này. Bạn đã mang cho ông ấy một bình cà phê giữ nhiệt. Bạn đứng sau lưng ông và cả hai cùng nhìn ngắm Sao chổi. Ông ấy nói với bạn: 'Nó thật đẹp, phải không? Giống như một viên đạn bạc đang hướng thẳng vào trái tim của thế giới.'",
+                '1000': "Đó là …bạn? Bạn chưa từng cảm giác từng thấy bức ảnh này. Bạn không hiểu, tại sao Magnus lại đối xử với bức ảnh của bạn như vậy?",
+                '2055': "Bạn cảm thấy một cơn rùng mình lạnh lẽo đột ngột. Bạn nhìn vào đôi bàn tay mình và tự hỏi liệu chúng có thực sự là của bạn hay không, hay một phiên bản khác của chính bạn đang giật dây từ phía bên kia căn phòng. Bạn nhận ra rằng trong phòng thí nghiệm này, người mà bạn nên sợ hãi nhất... có lẽ là chính bản thân mình.",
+                'a10': "Bạn nhớ lại một khoảnh khắc trong phòng thí nghiệm khi Magnus đột ngột dừng lại giữa câu nói, đôi mắt ông ấy đờ đẫn đi trong tích tắc. Ông ấy thì thầm: 'Không phải lúc này, tôi đang suy nghĩ.' Bạn có cảm giác lúc đó ông ấy không phải đang nói chuyện với chính mình.",
+                '801': "Bạn cảm nhận được lớp gỗ dưới ngón tay mình. Bạn nhớ mình đã leo lên chiếc thang này để tìm một cuốn sách cụ thể cho người đàn ông bạn yêu. Bạn nhớ ông ấy đứng bên dưới, nhìn lên các vì sao qua ô cửa sổ áp mái thay vì nhìn bạn. Bạn cảm thấy một nỗi đau nhói khi nhận ra mình chỉ là 'lựa chọn thứ hai' sau vũ trụ.",
+                '3535': "Bạn thấy Magnus qua lớp kính của phòng thí nghiệm. Bạn nhận ra mình là người duy nhất thực sự nhìn thấy ông ấy vì bạn là người duy nhất không muốn bất cứ điều gì từ ông ấy. Bạn thấy được sự thật vì bạn đứng trong bóng tối. Nhưng hãy cẩn thận: một tấm gương phản chiếu quá nhiều đau thương cuối cùng sẽ nứt vỡ."
+            }
+        },
+        'gold': {
+            name: "VÀNG KIM (GILDED GOLD)",
+            color: "#FFD700",
+            password: "PROFIT",
+            triggers: {
+                '101': "Bạn thấy logo trên màn hình. Bạn nhớ mình là người đã chi tiền cho nó. Bạn nhớ mình đã đứng đây, nhịp đôi giày đắt tiền và nghĩ: 'Đây là một cái hố ngốn tiền không đáy. Nếu lão ta không đưa ra kết quả ngay hôm nay, mình sẽ cắt đứt mọi thứ.'",
+                '235': "Bạn nhẩm tính chi phí trên mỗi lít. Thứ bùn loãng này còn đáng giá hơn cả vàng. Bạn tự hỏi liệu mình có thể lén mang một mẫu ra ngoài bằng bình giữ nhiệt hay không.",
+                '808': "Bạn lật bìa sách. Không có ngày bản quyền. Bản hiếm. Chắc chắn đáng giá ít nhất 5.000 đô la tại một buổi đấu giá. Bạn tự hỏi liệu có thể nhét vừa nó vào cặp táp không.",
+                '999': "Bạn nhớ ngày này. Đó là ngày bắt đầu quý tài chính. Bạn nhớ mình đã ký tấm séc lớn đầu tiên. Bạn đã nghĩ đó là khoản đầu tư của thế kỷ.",
+                '911': "Bạn coi chiếc điện thoại này là một mối đe dọa. Nếu nó được sử dụng, chính phủ sẽ phong tỏa phòng thí nghiệm, và bạn sẽ mất trắng khoản đầu tư. Bạn nhớ mình đã hối lộ ai đó để cắt đường dây, 'phòng trường hợp cần thiết'.",
+                '404': "Bạn vuốt phẳng tờ giấy trong tâm trí. Đó là bản thảo báo cáo ngân sách. Nó ghi rõ 'Dự báo Thất bại'. Bạn nhớ mình đã vò nát nó và ném vào mặt Tiến sĩ. Bạn đã hét lên: 'Sửa lại những con số này đi, hoặc tôi sẽ 'sửa' luôn cả ông!'. Bạn cảm thấy lòng tham đang bùng cháy trong lồng ngực.",
+                '202': "Bạn nhìn vào khe bỏ xu. Bạn nhớ mình cũng từng là một chàng trai trẻ như những sinh viên này, nhưng bạn không tìm kiếm một 'cảm giác'. Bạn đang tìm kiếm một lối thoát. Bạn nhớ mình đã nghĩ rằng nếu có đủ vốn, bạn có thể sở hữu tòa nhà này, trường đại học này, và cả bầu không khí mà những đứa trẻ này đang hít thở.",
+                '2055': "Bạn cảm thấy một cơn rùng mình lạnh lẽo đột ngột. Bạn nhìn vào đôi bàn tay mình và tự hỏi liệu chúng có thực sự là của bạn hay không, hay một phiên bản khác của chính bạn đang giật dây từ phía bên kia căn phòng. Bạn nhận ra rằng trong phòng thí nghiệm này, người mà bạn nên sợ hãi nhất... có lẽ là chính bản thân mình.",
+                'a10': "Bạn nhớ lại một khoảnh khắc trong phòng thí nghiệm khi Magnus đột ngột dừng lại giữa câu nói, đôi mắt ông ấy đờ đẫn đi trong tích tắc. Ông ấy thì thầm: 'Không phải lúc này, tôi đang suy nghĩ.' Bạn có cảm giác lúc đó ông ấy không phải đang nói chuyện với chính mình.",
+                '711': "Bạn cảm thấy một cơn sóng thỏa mãn lạnh lùng của kẻ săn mồi. Bạn nhớ mình đã đứng chính xác ở đây, cúi người trên chiếc bàn này và nói: 'Tôi không quan tâm đến 'đạo đức' của lão ta. Tôi mới là người ký những tấm séc này'. Bạn nhìn thấy bàn tay của Trưởng khoa run rẩy khi nhận phong bì. Bạn nhận ra mình không chỉ tài trợ cho một dự án; bạn đã mua đứt linh hồn của một con người.",
+                '3434': "Bạn thấy tài khoản ngân hàng của mình, nhưng tiền tệ được đo bằng đơn vị Joules. Bạn nhận ra mình không sở hữu tiền; bạn sở hữu mặt trời. 'Hệ thống quay quanh ông vì nó không còn lựa chọn nào khác. Ông cung cấp ánh sáng, nhưng ông cũng đổ xuống những chiếc bóng dài nhất.'"
+            }
+        }
+    };
+
+    let currentCharKey = null;
+
+    // FUNCTIONS
+    function promptPassword(charKey) {
+        currentCharKey = charKey;
+        const modal = document.getElementById('password-modal');
+        const input = document.getElementById('pass-input');
+        const error = document.getElementById('error-msg');
+        
+        input.value = "";
+        error.style.display = "none";
+        modal.style.display = "flex";
+        input.focus();
+
+        // Allow Enter key to submit
+        input.onkeypress = function(e) {
+            if (e.key === 'Enter') checkPassword();
+        }
+    }
+
+    function checkPassword() {
+        const input = document.getElementById('pass-input').value.toUpperCase().trim();
+        const correctPass = database[currentCharKey].password;
+
+        if (input === correctPass) {
+            closeModal();
+            selectChar(currentCharKey);
+        } else {
+            const error = document.getElementById('error-msg');
+            error.style.display = "block";
+            // Shake effect
+            const box = document.querySelector('.password-box');
+            box.style.transform = "translateX(5px)";
+            setTimeout(() => box.style.transform = "translateX(-5px)", 50);
+            setTimeout(() => box.style.transform = "translateX(0)", 100);
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('password-modal').style.display = 'none';
+    }
+
+    function selectChar(charKey) {
+        const charData = database[charKey];
+        
+        // Update Trigger Screen
+        document.getElementById('char-title').innerText = charData.name;
+        document.getElementById('char-title').style.color = charData.color;
+        
+        const container = document.getElementById('trigger-container');
+        container.innerHTML = ''; // Clear previous
+
+        // Create buttons for each trigger
+        for (const code in charData.triggers) {
+            const btn = document.createElement('button');
+            btn.className = 'trigger-btn';
+            btn.innerText = `[${code}]`;
+            btn.style.borderColor = charData.color;
+            btn.style.color = charData.color;
+            
+            btn.onmouseover = function() {
+                this.style.backgroundColor = charData.color;
+                this.style.color = (charKey === 'white') ? '#000' : '#fff';
+            };
+            btn.onmouseout = function() {
+                this.style.backgroundColor = 'transparent';
+                this.style.color = charData.color;
+            };
+
+            btn.onclick = () => showVision(code);
+            container.appendChild(btn);
+        }
+
+        switchScreen('screen-triggers');
+    }
+
+    function showVision(code) {
+        const charData = database[currentCharKey];
+        const text = charData.triggers[code];
+        document.getElementById('vision-code').innerText = `ACCESSING MEMORY: [${code}]`;
+        document.getElementById('vision-code').style.color = charData.color;
+        document.getElementById('vision-text').innerText = text;
+        document.getElementById('vision-text').style.borderColor = charData.color;
+        document.getElementById('vision-text').style.boxShadow = `inset 0 0 20px ${charData.color}33`;
+
+        switchScreen('screen-content');
+    }
+
+    function switchScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    function goHome() {
+        currentCharKey = null;
+        switchScreen('screen-select');
+    }
+
+    function goBackToTriggers() {
+        switchScreen('screen-triggers');
+    }
+
+</script>
+
+</body>
+</html>
