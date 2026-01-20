@@ -3,10 +3,250 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Puzzle 10</title>
+    <title>MONALISa Lock</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,700&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* Reset and base styles */
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Montserrat', sans-serif;
+            background-color: #333;
+            /* High resolution Mona Lisa */
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg/1200px-Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg');
+            background-size: cover;
+            background-position: center;
+            overflow: hidden;
+        }
+
+        /* Dark overlay */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+
+        /* Home Button Styles */
+        .home-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.15);
+            padding: 10px 20px;
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .home-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+
+        /* Main Lock Container */
+        .lock-container {
+            position: relative;
+            z-index: 2;
+            background: rgba(40, 40, 40, 0.4); 
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            padding: 50px 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            color: white;
+            width: 320px;
+        }
+
+        /* Title Styling */
+        h1 {
+            margin: 10px 0 25px 0;
+            /* Changed to Playfair Display to ensure 'a' looks lowercase */
+            font-family: 'Playfair Display', serif; 
+            font-size: 42px; /* Large size */
+            font-weight: 700;
+            font-style: italic; /* Adds an artistic touch */
+            letter-spacing: 1px;
+            color: #e0c088; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            line-height: 1.1;
+        }
+
+        .icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+            color: #d4af37;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .hint {
+            font-size: 13px;
+            background: rgba(0,0,0,0.6);
+            color: #ddd;
+            padding: 8px 15px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        input {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 28px;
+            text-align: center;
+            padding: 12px;
+            width: 180px;
+            border: none;
+            border-bottom: 2px solid rgba(255,255,255,0.5);
+            border-radius: 5px 5px 0 0;
+            letter-spacing: 8px;
+            margin-bottom: 25px;
+            outline: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            background: rgba(255, 255, 255, 0.2);
+            border-bottom: 2px solid #d4af37;
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        button {
+            font-family: 'Montserrat', sans-serif;
+            display: block;
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            cursor: pointer;
+            background: linear-gradient(45deg, #996633, #d4af37);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 600;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.4);
+            background: linear-gradient(45deg, #a8733e, #eac54f);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        #message {
+            margin-top: 20px;
+            min-height: 25px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        }
+
+        .shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+    </style>
 </head>
 <body>
-    <h1>Puzzle 10</h1>
-    <p>This puzzle page is empty. Go back to <a href="index.html">Puzzle List</a>.</p>
+
+    <a href="index.html" class="home-btn">
+        <span>🏠</span> Home
+    </a>
+
+    <div class="overlay"></div>
+
+    <div class="lock-container" id="card">
+        <div class="icon" id="lockIcon">🔒</div>
+        
+        <h1>MONALISa lock</h1>
+        
+        <div class="hint">Hint: 01 = 1, 12 = 3</div>
+        
+        <br>
+        
+        <input type="text" id="passcode" maxlength="4" placeholder="••••" autocomplete="off" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+        
+        <button onclick="checkPassword()">UNLOCK</button>
+        
+        <div id="message"></div>
+    </div>
+
+    <script>
+        function checkPassword() {
+            const inputField = document.getElementById('passcode');
+            const inputVal = inputField.value;
+            const correctCode = "6237";
+            const messageEl = document.getElementById('message');
+            const card = document.getElementById('card');
+            const icon = document.getElementById('lockIcon');
+
+            if (inputVal === correctCode) {
+                // Success
+                messageEl.style.color = "#4eff4e";
+                messageEl.textContent = "ACCESS GRANTED";
+                icon.textContent = "🔓";
+                icon.style.color = "#4eff4e";
+                inputField.disabled = true;
+                inputField.style.opacity = "0.5";
+                card.classList.remove('shake');
+            } else {
+                // Failure
+                messageEl.style.color = "#ff4e4e";
+                messageEl.textContent = "ACCESS DENIED";
+                card.classList.remove('shake');
+                void card.offsetWidth; 
+                card.classList.add('shake');
+                inputField.value = '';
+                inputField.focus();
+            }
+        }
+
+        document.getElementById("passcode").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                checkPassword();
+            }
+        });
+
+        window.onload = function() {
+            document.getElementById("passcode").focus();
+        };
+    </script>
 </body>
 </html>
