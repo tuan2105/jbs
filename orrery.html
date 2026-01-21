@@ -74,6 +74,9 @@
 
         #toggle-ui-btn { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; background: #0a1018; border: 1px solid #4af; color: white; cursor: pointer; border-radius: 8px; z-index: 1000; display: none; pointer-events: auto; font-size: 1.2rem; }
         #reset-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, #2266aa, #114488); border: none; color: white; border-radius: 6px; cursor: pointer; margin-top: 10px; font-weight: bold; letter-spacing: 1px; }
+        
+        #home-btn { position: absolute; top: 20px; left: 20px; padding: 10px 20px; background: linear-gradient(135deg, #44aaff, #2266aa); border: 1px solid rgba(68, 170, 255, 0.5); color: white; border-radius: 6px; cursor: pointer; font-weight: bold; letter-spacing: 1px; z-index: 10; pointer-events: auto; transition: 0.2s; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+        #home-btn:hover { background: linear-gradient(135deg, #66bbff, #3377bb); box-shadow: 0 0 20px rgba(68, 170, 255, 0.6); }
     </style>
     <script type="importmap">
         {
@@ -93,6 +96,7 @@
     <div id="popup-5" class="event-popup">> LUNAR FRACTURE RECOGNIZED. > TIDAL FORCES: CATASTROPHIC. > NAV-LOCK: DECEMBER 31, ?????. > WARNING: TIMELINE INTEGRITY FAILING. THE END IS NEAR.</div>
     
     <div id="hud-layer"></div>
+    <a id="home-btn" href="index.html">← Home</a>
     <button id="toggle-ui-btn" onclick="toggleUI(true)">☰</button>
 
     <div id="ui-container">
