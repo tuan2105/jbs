@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Cosmic Cipher</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --terminal-green: #0f0;
+            --terminal-dim: #004400;
+            --highlight: #00ffff; /* Cyan for the special words */
+            --alert: #ff3333;
+            --font-main: 'Courier New', Courier, monospace;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--terminal-green);
+            font-family: var(--font-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Home Button */
+        .home-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            text-decoration: none;
+            color: var(--bg-color);
+            background-color: var(--terminal-green);
+            padding: 8px 16px;
+            font-weight: bold;
+            border: 1px solid var(--terminal-green);
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background-color: var(--bg-color);
+            color: var(--terminal-green);
+            box-shadow: 0 0 10px var(--terminal-green);
+        }
+
+        h1 {
+            text-shadow: 0 0 10px var(--terminal-green);
+            margin-bottom: 10px;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .subtitle {
+            color: #88ff88;
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+            text-align: center;
+            max-width: 600px;
+        }
+
+        /* Container for the puzzle columns */
+        .puzzle-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 40px;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        .panel {
+            border: 1px solid var(--terminal-dim);
+            padding: 20px;
+            background: rgba(0, 20, 0, 0.3);
+            min-width: 300px;
+            flex: 1;
+        }
+
+        h2 {
+            border-bottom: 1px solid var(--terminal-green);
+            padding-bottom: 5px;
+            margin-top: 0;
+            font-size: 1.2rem;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            padding: 5px 0;
+            border-bottom: 1px dashed var(--terminal-dim);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* The Special "Primary Transmission" words */
+        .primary-word {
+            color: var(--highlight);
+            font-weight: bold;
+            text-shadow: 0 0 5px var(--highlight);
+        }
+
+        .cipher-block {
+            margin-top: 30px;
+            text-align: center;
+            background: #002200;
+            padding: 20px;
+            border: 1px solid var(--terminal-green);
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .cipher-text {
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            margin: 20px 0;
+            word-spacing: 10px;
+        }
+
+        /* Input Section */
+        .input-section {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        input[type="text"] {
+            background: black;
+            border: 1px solid var(--terminal-green);
+            color: var(--terminal-green);
+            padding: 10px;
+            font-family: var(--font-main);
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            width: 200px;
+            text-align: center;
+        }
+
+        button.submit-btn {
+            background: var(--terminal-green);
+            color: black;
+            border: none;
+            padding: 10px 20px;
+            font-family: var(--font-main);
+            font-size: 1.2rem;
+            cursor: pointer;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        button.submit-btn:hover {
+            box-shadow: 0 0 15px var(--terminal-green);
+        }
+
+        #result-msg {
+            margin-top: 15px;
+            font-weight: bold;
+            height: 20px;
+        }
+
+        .success { color: var(--highlight); }
+        .failure { color: var(--alert); }
+
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="home-btn">&larr; HOME</a>
+
+    <h1>SYSTEM INTERFACE: COSMIC CIPHER</h1>
+    <p class="subtitle">
+        
+        <br>Magnus's Log<br>
+        
+    </p>
+
+    <div class="puzzle-container">
+        <div class="panel">
+            <h2>DATA LOG (SCRAMBLED)</h2>
+            <ul>
+                <li><span>LUNAR</span> <span>95</span></li>
+                <li><span>ONE</span> <span>43</span></li>
+                <li><span>TRITON</span> <span>150</span></li>
+                <li><span>ARA</span> <span>70</span></li>
+                <li><span>NEON</span> <span>73</span></li>
+                <li><span>ARC</span> <span>72</span></li>
+                <li><span>LUNA</span> <span>45</span></li>
+                <li><span>HEAT</span> <span>60</span></li>
+                <li><span>ION</span> <span>60</span></li>
+                <li><span>AREA</span> <span>78</span></li>
+                <li><span>RED</span> <span>73</span></li>
+                <li><span>JET</span> <span>88</span></li>
+            </ul>
+        </div>
+
+        <div class="panel">
+            <h2>PRIMARY TRANSMISSION</h2>
+            <p style="font-size: 0.8rem; opacity: 0.8;"></p>
+            <ul>
+                <li class="primary-word"><span>1. ALPHA</span> <span>85</span></li>
+                <li class="primary-word"><span>2. SOLAR</span> <span>86</span></li>
+                <li class="primary-word"><span>3. PHASE</span> <span>98</span></li>
+                <li class="primary-word"><span>4. LUNAR</span> <span>95</span></li>
+                <li class="primary-word"><span>5. THE</span> <span>50</span></li>
+                <li class="primary-word"><span>6. DATA</span> <span>55</span></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="cipher-block">
+        <h2>ENCRYPTED SIGNAL</h2>
+        <p></p>
+        <div class="cipher-text">
+            60&middot;5&middot;25&middot;30 &nbsp;|&nbsp; 8&middot;10&middot;12&middot;22 &nbsp;|&nbsp; 20&middot;22&middot;25&middot;50&middot;15
+        </div>
+    </div>
+
+    <div class="input-section">
+        <p>ENTER FINAL PASSWORD:</p>
+        <input type="text" id="answerInput" placeholder="PASSWORD">
+        <button class="submit-btn" onclick="checkAnswer()">EXECUTE</button>
+        <div id="result-msg"></div>
+    </div>
+
+    <script>
+        function checkAnswer() {
+            const input = document.getElementById('answerInput').value.toUpperCase().trim();
+            const resultMsg = document.getElementById('result-msg');
+
+            
+            if (input === "PLANET") {
+                resultMsg.textContent = "ACCESS GRANTED. SYSTEM UNLOCKED.";
+                resultMsg.className = "success";
+                document.body.style.boxShadow = "inset 0 0 50px #00ffff";
+            } else {
+                resultMsg.textContent = "ACCESS DENIED. INCORRECT PASSWORD.";
+                resultMsg.className = "failure";
+                document.body.style.boxShadow = "inset 0 0 50px #ff3333";
+                setTimeout(() => {
+                    document.body.style.boxShadow = "none";
+                }, 500);
+            }
+        }
+    </script>
+
+</body>
+</html>
