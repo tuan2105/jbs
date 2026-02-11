@@ -3,10 +3,421 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Puzzle 11</title>
+    <title>The Shakespeare Code</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #c0392b;
+            --gold-color: #d4af37;
+            --bg-color: #fdfbf7;
+            --card-bg: #fff;
+            --text-color: #2d2d2d;
+        }
+
+        body {
+            font-family: 'Playfair Display', 'Times New Roman', serif;
+            background-color: var(--bg-color);
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4af37' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            margin: 0;
+            padding: 0;
+            color: var(--text-color);
+        }
+
+        /* Header Styling */
+        header {
+            background: linear-gradient(to bottom, #2c3e50, #1a252f);
+            color: var(--gold-color);
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            border-bottom: 3px solid var(--gold-color);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+            font-weight: 700;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .home-btn {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            text-decoration: none;
+            color: var(--bg-color);
+            background-color: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border: 1px solid var(--gold-color);
+            border-radius: 4px;
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background-color: var(--gold-color);
+            color: var(--primary-color);
+        }
+
+        /* Grid Layout */
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 25px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            padding: 15px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border-color: var(--gold-color);
+        }
+
+        /* Image Styling */
+        .img-container {
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            background-color: #eee;
+            position: relative;
+        }
+
+        .card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+
+        .card:hover img {
+            transform: scale(1.1);
+        }
+
+        .character-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 12px;
+            display: block;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--gold-color);
+            padding-bottom: 5px;
+            display: inline-block;
+        }
+
+        /* Form Elements */
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            background-color: #fafafa;
+            font-size: 14px;
+            cursor: pointer;
+            font-family: 'Segoe UI', sans-serif;
+            transition: border-color 0.3s;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        select:disabled {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            cursor: not-allowed;
+            border-color: #2e7d32;
+            font-weight: bold;
+            appearance: none; /* Removes arrow for cleaner look on disabled */
+            text-align: center;
+        }
+
+        /* Success Animation */
+        .success-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            flex-direction: column;
+            animation: fadeIn 0.5s;
+        }
+
+        .success-box {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            border: 4px solid var(--gold-color);
+            box-shadow: 0 0 50px rgba(212, 175, 55, 0.5);
+        }
+
+        .success-box h2 {
+            color: var(--primary-color);
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .success-box p {
+            font-family: 'Segoe UI', sans-serif;
+            color: #666;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.5rem; }
+            .home-btn { position: static; transform: none; display: inline-block; margin-bottom: 10px; }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <h1>Puzzle 11</h1>
-    <p>This puzzle page is empty. Go back to <a href="index.html">Puzzle List</a>.</p>
+
+    <header>
+        <a href="index.html" class="home-btn">&#8962; Home</a>
+        <h1>The Shakespeare Code</h1>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <div class="img-container">
+                <img src="https://elit352.wordpress.com/wp-content/uploads/2013/03/tumblr_m1lpbkqzaf1roii3oo1_500.jpg?w=640" alt="Enobarbus">
+            </div>
+            <span class="character-name">Enobarbus</span>
+            <select data-correct="Sarah" onchange="checkAnswers()">
+                <option value="">-- Select --</option>
+                <option value="Sarah">Sarah</option>
+                <option value="Julian">Julian</option>
+                <option value="Arthur">Arthur</option>
+                <option value="Kevin">Kevin</option>
+                <option value="Magnus">Magnus</option>
+                <option value="Evelyn">Evelyn</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="img-container">
+                <img src="https://cdn.britannica.com/48/5748-004-D905ED51/Mark-Antony-Julius-Caesar-Marlon-Brando-1953.jpg" 
+                     onerror="this.src='https://placehold.co/400x300/2c3e50/FFF?text=Antony'" alt="Antony">
+            </div>
+            <span class="character-name">Antony</span>
+            <select data-correct="Julian" disabled>
+                <option value="Julian" selected>Julian</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="img-container">
+                 <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQP2OvZv5yBKEjtjq-2GhCRIUo8CgNE3LRuVQ&s" 
+                     onerror="this.src='https://placehold.co/400x300/34495e/FFF?text=Horatio'" alt="Horatio">
+            </div>
+            <span class="character-name">Horatio</span>
+            <select data-correct="Arthur" onchange="checkAnswers()">
+                <option value="">-- Select --</option>
+                <option value="Sarah">Sarah</option>
+                <option value="Julian">Julian</option>
+                <option value="Arthur">Arthur</option>
+                <option value="Kevin">Kevin</option>
+                <option value="Magnus">Magnus</option>
+                <option value="Evelyn">Evelyn</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="img-container">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSKluArSKHGSgqxG3Aaq_XUCwy1M7ObvtMsxg&s.jpg" 
+                     onerror="this.src='https://placehold.co/400x300/4a3b3b/FFF?text=Kent'" alt="Kent">
+            </div>
+            <span class="character-name">Kent</span>
+            <select data-correct="Sarah" onchange="checkAnswers()">
+                <option value="">-- Select --</option>
+                <option value="Sarah">Sarah</option>
+                <option value="Julian">Julian</option>
+                <option value="Arthur">Arthur</option>
+                <option value="Kevin">Kevin</option>
+                <option value="Magnus">Magnus</option>
+                <option value="Evelyn">Evelyn</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="img-container">
+                <img src="https://nosweatshakespeare.com/wp-content/uploads/2020/09/ariel-the-tempest-60032f97-0370-4edd-b4c8-62ede33f20c-resize-750-e1600060221207.jpeg" alt="Ariel">
+            </div>
+            <span class="character-name">Ariel</span>
+            <select data-correct="Kevin" onchange="checkAnswers()">
+                <option value="">-- Select --</option>
+                <option value="Sarah">Sarah</option>
+                <option value="Julian">Julian</option>
+                <option value="Arthur">Arthur</option>
+                <option value="Kevin">Kevin</option>
+                <option value="Magnus">Magnus</option>
+                <option value="Evelyn">Evelyn</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="img-container">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/3/39/Cordelia_-_William_Frederick_Yeames.jpg" 
+                     onerror="this.src='https://placehold.co/400x300/7f4a4a/FFF?text=Cordelia'" alt="Cordelia">
+            </div>
+            <span class="character-name">Cordelia</span>
+            <select data-correct="Kevin" onchange="checkAnswers()">
+                <option value="">-- Select --</option>
+                <option value="Sarah">Sarah</option>
+                <option value="Julian">Julian</option>
+                <option value="Arthur">Arthur</option>
+                <option value="Kevin">Kevin</option>
+                <option value="Magnus">Magnus</option>
+                <option value="Evelyn">Evelyn</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="img-container">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTfJZuWwqITd4nx4Ba8q229Nfk2yaqRiLVj5A&s" 
+                     onerror="this.src='https://placehold.co/400x300/2c2c2c/FFF?text=Shylock'" alt="Shylock">
+            </div>
+            <span class="character-name">Shylock</span>
+            <select data-correct="Julian" onchange="checkAnswers()">
+                <option value="">-- Select --</option>
+                <option value="Sarah">Sarah</option>
+                <option value="Julian">Julian</option>
+                <option value="Arthur">Arthur</option>
+                <option value="Kevin">Kevin</option>
+                <option value="Magnus">Magnus</option>
+                <option value="Evelyn">Evelyn</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="img-container">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQfqmNRSR7VZn3S-8VwkczJdTJ9zowMT3pFpw&s" 
+                     onerror="this.src='https://placehold.co/400x300/505050/FFF?text=Cassius'" alt="Cassius">
+            </div>
+            <span class="character-name">Cassius</span>
+            <select data-correct="Arthur" onchange="checkAnswers()">
+                <option value="">-- Select --</option>
+                <option value="Sarah">Sarah</option>
+                <option value="Julian">Julian</option>
+                <option value="Arthur">Arthur</option>
+                <option value="Kevin">Kevin</option>
+                <option value="Magnus">Magnus</option>
+                <option value="Evelyn">Evelyn</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="img-container">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQrx4uPF-OCCsVzlxydbQWupW3CbJyQrmR6uA&s" 
+                     onerror="this.src='https://placehold.co/400x300/1a1a1a/FFF?text=Prospero'" alt="Prospero">
+            </div>
+            <span class="character-name">Prospero</span>
+            <select data-correct="Magnus" onchange="checkAnswers()">
+                <option value="">-- Select --</option>
+                <option value="Sarah">Sarah</option>
+                <option value="Julian">Julian</option>
+                <option value="Arthur">Arthur</option>
+                <option value="Kevin">Kevin</option>
+                <option value="Magnus">Magnus</option>
+                <option value="Evelyn">Evelyn</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="img-container">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQtCHTOUZk-aXXx_OrR9O1UIIw7ysQxG_OPZQ&s" 
+                     onerror="this.src='https://placehold.co/400x300/FFB6C1/000?text=Titania'" alt="Titania">
+            </div>
+            <span class="character-name">Titania</span>
+            <select data-correct="Evelyn" onchange="checkAnswers()">
+                <option value="">-- Select --</option>
+                <option value="Sarah">Sarah</option>
+                <option value="Julian">Julian</option>
+                <option value="Arthur">Arthur</option>
+                <option value="Kevin">Kevin</option>
+                <option value="Magnus">Magnus</option>
+                <option value="Evelyn">Evelyn</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="img-container">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQxHyCxZOFNjMV3VNKN8iAZjJKGkAPODhEWcQ&s" 
+                     onerror="this.src='https://placehold.co/400x300/003366/FFF?text=Miranda'" alt="Miranda">
+            </div>
+            <span class="character-name">Miranda</span>
+            <select data-correct="Evelyn" onchange="checkAnswers()">
+                <option value="">-- Select --</option>
+                <option value="Sarah">Sarah</option>
+                <option value="Julian">Julian</option>
+                <option value="Arthur">Arthur</option>
+                <option value="Kevin">Kevin</option>
+                <option value="Magnus">Magnus</option>
+                <option value="Evelyn">Evelyn</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="successModal" class="success-overlay">
+        <div class="success-box">
+            <h2>Objectives Recovered</h2>
+            <p>You have successfully decoded the list.</p>
+            <button onclick="closeModal()" style="margin-top:15px; padding:10px 20px; background:var(--primary-color); color:white; border:none; cursor:pointer; border-radius:4px;">Close</button>
+        </div>
+    </div>
+
+    <script>
+        function checkAnswers() {
+            const allSelects = document.querySelectorAll('select');
+            let isAllCorrect = true;
+
+            allSelects.forEach(select => {
+                if (select.value !== select.dataset.correct) {
+                    isAllCorrect = false;
+                }
+            });
+
+            if (isAllCorrect) {
+                document.getElementById('successModal').style.display = 'flex';
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('successModal').style.display = 'none';
+        }
+    </script>
+
 </body>
 </html>

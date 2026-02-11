@@ -3,10 +3,499 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Puzzle 12</title>
+    <title>The University Variables</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-purple: #bc13fe;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --card-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050505;
+            background-image: 
+                radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 3px),
+                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 2px),
+                radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 3px);
+            background-size: 550px 550px, 350px 350px, 250px 250px;
+            background-position: 0 0, 40px 60px, 130px 270px;
+            font-family: 'Roboto', sans-serif;
+            color: white;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 1px solid var(--neon-blue);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin: 0;
+            text-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        .home-btn {
+            position: absolute;
+            left: 20px;
+            text-decoration: none;
+            color: var(--neon-blue);
+            border: 1px solid var(--neon-blue);
+            padding: 8px 16px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+            background: transparent;
+        }
+
+        .home-btn:hover {
+            background: var(--neon-blue);
+            color: #000;
+            box-shadow: 0 0 15px var(--neon-blue);
+        }
+
+        /* Grid */
+        .container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--glass-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            transition: transform 0.3s, border-color 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--neon-purple);
+        }
+
+        .img-wrapper {
+            width: 100%;
+            height: 180px;
+            overflow: hidden;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+
+        .card:hover img {
+            transform: scale(1.1);
+        }
+
+        .obj-name {
+            display: block;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            color: #ddd;
+        }
+
+        /* Selectors */
+        select {
+            width: 100%;
+            padding: 8px;
+            background: #111;
+            color: #fff;
+            border: 1px solid #444;
+            border-radius: 4px;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--neon-blue);
+        }
+
+        /* Styles for the Magnus option to make it stand out slightly (optional) */
+        option[value="Magnus"] {
+            color: orange;
+        }
+
+        /* Popup Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: #111;
+            border: 2px solid var(--neon-blue);
+            padding: 40px;
+            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0 0 30px var(--neon-blue);
+            animation: glow 1.5s infinite alternate;
+        }
+
+        .modal-content h2 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-blue);
+            font-size: 2rem;
+            margin: 0 0 20px 0;
+        }
+
+        .close-btn {
+            background: transparent;
+            border: 1px solid white;
+            color: white;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .close-btn:hover {
+            background: white;
+            color: black;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 10px var(--neon-blue); }
+            to { box-shadow: 0 0 30px var(--neon-blue), 0 0 10px white; }
+        }
+
+    </style>
 </head>
 <body>
-    <h1>Puzzle 12</h1>
-    <p>This puzzle page is empty. Go back to <a href="index.html">Puzzle List</a>.</p>
+
+    <header>
+        <a href="index.html" class="home-btn">&lt; HOME</a>
+        <h1>The University Variables</h1>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <div class="img-wrapper">
+                <img src="https://earthsky.org/upl/2013/04/pulsar.jpg" alt="Pulsar">
+            </div>
+            <span class="obj-name">The Pulsar</span>
+            <select data-correct="Blue" onchange="checkSystem()">
+                <option value="">-- Blank --</option>
+                <option value="Red">Red</option>
+                <option value="Yellow">Yellow</option>
+                <option value="Green">Green</option>
+                <option value="Blue">Blue</option>
+                <option value="Grey">Grey</option>
+                
+                <option value="Violet">Violet</option>
+                <option value="White">White</option>
+                <option value="Magnus">Magnus</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="img-wrapper">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXhu3E1TbpK_rl8VFHne_15CMlb9tHM4PxMg&s" alt="Red Giant">
+            </div>
+            <span class="obj-name">The Red Giant</span>
+            <select data-correct="Red" onchange="checkSystem()">
+                <option value="">-- Blank --</option>
+                <option value="Red">Red</option>
+                <option value="Yellow">Yellow</option>
+                <option value="Green">Green</option>
+                <option value="Blue">Blue</option>
+                <option value="Grey">Grey</option>
+                
+                <option value="Violet">Violet</option>
+                <option value="White">White</option>
+                <option value="Magnus">Magnus</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="img-wrapper">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg/320px-The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg" alt="Sun">
+            </div>
+            <span class="obj-name">The Sun</span>
+            <select data-correct="Yellow" onchange="checkSystem()">
+                <option value="">-- Blank --</option>
+                <option value="Red">Red</option>
+                <option value="Yellow">Yellow</option>
+                <option value="Green">Green</option>
+                <option value="Blue">Blue</option>
+                <option value="Grey">Grey</option>
+                
+                <option value="Violet">Violet</option>
+                <option value="White">White</option>
+                <option value="Magnus">Magnus</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="img-wrapper">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/FullMoon2010.jpg/320px-FullMoon2010.jpg" alt="Moon">
+            </div>
+            <span class="obj-name">The Moon</span>
+            <select data-correct="Grey" onchange="checkSystem()">
+                <option value="">-- Blank --</option>
+                <option value="Red">Red</option>
+                <option value="Yellow">Yellow</option>
+                <option value="Green">Green</option>
+                <option value="Blue">Blue</option>
+                <option value="Grey">Grey</option>
+                
+                <option value="Violet">Violet</option>
+                <option value="White">White</option>
+                <option value="Magnus">Magnus</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="img-wrapper">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Venus_globe.jpg/320px-Venus_globe.jpg" alt="Venus">
+            </div>
+            <span class="obj-name">Venus</span>
+            <select data-correct="" onchange="checkSystem()">
+                <option value="">-- Blank --</option>
+                <option value="Red">Red</option>
+                <option value="Yellow">Yellow</option>
+                <option value="Green">Green</option>
+                <option value="Blue">Blue</option>
+                <option value="Grey">Grey</option>
+                
+                <option value="Violet">Violet</option>
+                <option value="White">White</option>
+                <option value="Magnus">Magnus</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="img-wrapper">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Uranus2.jpg/320px-Uranus2.jpg" alt="Uranus">
+            </div>
+            <span class="obj-name">Uranus</span>
+            <select data-correct="" onchange="checkSystem()">
+                <option value="">-- Blank --</option>
+                <option value="Red">Red</option>
+                <option value="Yellow">Yellow</option>
+                <option value="Green">Green</option>
+                <option value="Blue">Blue</option>
+                <option value="Grey">Grey</option>
+                
+                <option value="Violet">Violet</option>
+                <option value="White">White</option>
+                <option value="Magnus">Magnus</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="img-wrapper">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Keplers_supernova.jpg/320px-Keplers_supernova.jpg" alt="Supernova">
+            </div>
+            <span class="obj-name">Supernova</span>
+            <select data-correct="" onchange="checkSystem()">
+                <option value="">-- Blank --</option>
+                <option value="Red">Red</option>
+                <option value="Yellow">Yellow</option>
+                <option value="Green">Green</option>
+                <option value="Blue">Blue</option>
+                <option value="Grey">Grey</option>
+                
+                <option value="Violet">Violet</option>
+                <option value="White">White</option>
+                <option value="Magnus">Magnus</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="img-wrapper">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Black_hole_-_Messier_87_crop_max_res.jpg/320px-Black_hole_-_Messier_87_crop_max_res.jpg" alt="Black Hole">
+            </div>
+            <span class="obj-name">The Black Hole</span>
+            <select data-correct="" onchange="checkSystem()">
+                <option value="">-- Blank --</option>
+                <option value="Red">Red</option>
+                <option value="Yellow">Yellow</option>
+                <option value="Green">Green</option>
+                <option value="Blue">Blue</option>
+                <option value="Grey">Grey</option>
+                
+                <option value="Violet">Violet</option>
+                <option value="White">White</option>
+                <option value="Magnus">Magnus</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="img-wrapper">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqWORQdz_GAxtiFs2InfDsOd0KuS8sIqcXrA&s" alt="White Hole">
+            </div>
+            <span class="obj-name">The White Hole</span>
+            <select data-correct="" onchange="checkSystem()">
+                <option value="">-- Blank --</option>
+                <option value="Red">Red</option>
+                <option value="Yellow">Yellow</option>
+                <option value="Green">Green</option>
+                <option value="Blue">Blue</option>
+                <option value="Grey">Grey</option>
+                
+                <option value="Violet">Violet</option>
+                <option value="White">White</option>
+                <option value="Magnus">Magnus</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="img-wrapper">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Saturn_during_Equinox.jpg/320px-Saturn_during_Equinox.jpg" alt="Saturn">
+            </div>
+            <span class="obj-name">Saturn</span>
+            <select data-correct="" onchange="checkSystem()">
+                <option value="">-- Blank --</option>
+                <option value="Red">Red</option>
+                <option value="Yellow">Yellow</option>
+                <option value="Green">Green</option>
+                <option value="Blue">Blue</option>
+                <option value="Grey">Grey</option>
+                
+                <option value="Violet">Violet</option>
+                <option value="White">White</option>
+                <option value="Magnus">Magnus</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="img-wrapper">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Jupiter_and_its_shrunken_Great_Red_Spot.jpg/320px-Jupiter_and_its_shrunken_Great_Red_Spot.jpg" alt="Jupiter">
+            </div>
+            <span class="obj-name">Jupiter</span>
+            <select data-correct="Magnus" onchange="checkSystem()">
+                <option value="">-- Blank --</option>
+                <option value="Red">Red</option>
+                <option value="Yellow">Yellow</option>
+                <option value="Green">Green</option>
+                <option value="Blue">Blue</option>
+                <option value="Grey">Grey</option>
+                
+                <option value="Violet">Violet</option>
+                <option value="White">White</option>
+                <option value="Magnus">Magnus</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="img-wrapper">
+                 <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTPkYd-aUWxs11ZAW6S8buLx2OPHU-HVYCtbw&s" alt="Singularity">
+            </div>
+            <span class="obj-name">The Singularity</span>
+            <select data-correct="White" onchange="checkSystem()">
+                <option value="">-- Blank --</option>
+                <option value="Red">Red</option>
+                <option value="Yellow">Yellow</option>
+                <option value="Green">Green</option>
+                <option value="Blue">Blue</option>
+                <option value="Grey">Grey</option>
+                
+                <option value="Violet">Violet</option>
+                <option value="White">White</option>
+                <option value="Magnus">Magnus</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="img-wrapper">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6NFUHZMbC-t81GRaPUMZgZ6qg2O2eeklB3g&s" alt="Aurora">
+            </div>
+            <span class="obj-name">The Aurora</span>
+            <select data-correct="Green" onchange="checkSystem()">
+                <option value="">-- Blank --</option>
+                <option value="Red">Red</option>
+                <option value="Yellow">Yellow</option>
+                <option value="Green">Green</option>
+                <option value="Blue">Blue</option>
+                <option value="Grey">Grey</option>
+                
+                <option value="Violet">Violet</option>
+                <option value="White">White</option>
+                <option value="Magnus">Magnus</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="img-wrapper">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhBPuRVcip2ToMaoI5zKkPMJ6wBcfhpQyfag&s" alt="Event Horizon">
+            </div>
+            <span class="obj-name">The Event Horizon</span>
+            <select data-correct="Violet" onchange="checkSystem()">
+                <option value="">-- Blank --</option>
+                <option value="Red">Red</option>
+                <option value="Yellow">Yellow</option>
+                <option value="Green">Green</option>
+                <option value="Blue">Blue</option>
+                <option value="Grey">Grey</option>
+                
+                <option value="Violet">Violet</option>
+                <option value="White">White</option>
+                <option value="Magnus">Magnus</option>
+            </select>
+        </div>
+
+    </div>
+
+    <div id="successModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Anchor Ready</h2>
+            <button class="close-btn" onclick="document.getElementById('successModal').style.display='none'">ACKNOWLEDGE</button>
+        </div>
+    </div>
+
+    <script>
+        function checkSystem() {
+            const allSelects = document.querySelectorAll('select');
+            let allCorrect = true;
+
+            allSelects.forEach(select => {
+                if (select.value !== select.dataset.correct) {
+                    allCorrect = false;
+                }
+            });
+
+            if (allCorrect) {
+                // Small delay to ensure the UI updates before the popup
+                setTimeout(() => {
+                    document.getElementById('successModal').style.display = 'flex';
+                }, 200);
+            }
+        }
+    </script>
 </body>
 </html>
